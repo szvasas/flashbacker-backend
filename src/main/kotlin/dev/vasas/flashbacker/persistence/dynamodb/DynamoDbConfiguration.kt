@@ -17,20 +17,19 @@ import org.springframework.context.annotation.Profile
 @Configuration
 @EnableDynamoDBRepositories("dev.vasas.flashbacker.persistence.dynamodb.dao")
 @Profile("!dev")
-class DynamoDbConfiguration {
+class DynamoDbConfiguration(
+        @Value("\${flashbacker.dynamodb.endpoint}")
+        private val endpoint: String,
 
-    @Value("\${flashbacker.dynamodb.endpoint}")
-    lateinit var endpoint: String
+        @Value("\${flashbacker.dynamodb.accesskey}")
+        private val accessKey: String,
 
-    @Value("\${flashbacker.dynamodb.accesskey}")
-    lateinit var accessKey: String
+        @Value("\${flashbacker.dynamodb.secretkey}")
+        private val secretKey: String,
 
-    @Value("\${flashbacker.dynamodb.secretkey}")
-    lateinit var secretKey: String
-
-    @Value("\${flashbacker.dynamodb.region}")
-    lateinit var region: String
-
+        @Value("\${flashbacker.dynamodb.region}")
+        private val region: String
+) {
     @Bean
     fun amazonAWSCredentials(): AWSCredentials {
         return BasicAWSCredentials(accessKey, secretKey)

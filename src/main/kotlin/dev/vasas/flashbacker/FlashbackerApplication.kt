@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class FlashbackerApplication
 
 fun main(args: Array<String>) {
-	runApplication<FlashbackerApplication>(*args)
+    runApplication<FlashbackerApplication>(*args)
 }

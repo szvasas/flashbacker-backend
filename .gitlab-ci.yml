@@ -20,12 +20,28 @@ variables:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
+stages:
+  - static-analysis
+  - build
+  - test
+  - package
+
+static-analysis:
+  stage: static-analysis
+  script: ./gradlew detekt
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    policy: push
+    paths:
+      - build
+      - .gradle
+
 build:
   stage: build
   script: ./gradlew --build-cache assemble
   cache:
     key: "$CI_COMMIT_REF_NAME"
-    policy: push
+    policy: pull
     paths:
       - build
       - .gradle
@@ -41,7 +57,7 @@ test:
       - .gradle
 
 docker-image-build:
-  stage: deploy
+  stage: package
   script:
     - ./gradlew jib -Djib.to.image="$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA" -Djib.to.auth.username="$CI_REGISTRY_USER" -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" -Djib.container.creationTime="USE_CURRENT_TIMESTAMP"
   cache:
