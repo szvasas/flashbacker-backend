@@ -8,6 +8,7 @@ interface MemoryRepository {
 
     fun deleteById(id: String)
 
-    fun findMemoriesForUser(userName: String): List<Memory>
+    fun findById(id: String): Memory?
 
+    fun findMemoriesForUser(userName: String): List<Memory>
 }
