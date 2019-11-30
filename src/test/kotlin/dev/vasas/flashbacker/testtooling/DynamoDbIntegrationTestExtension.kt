@@ -44,7 +44,7 @@ internal class DynamoDbIntegrationTestExtension : BeforeAllCallback {
                     .withTableName("memory")
                     .withKeySchema(KeySchemaElement("id", KeyType.HASH))
                     .withAttributeDefinitions(AttributeDefinition("id", ScalarAttributeType.S))
-                    .withProvisionedThroughput(ProvisionedThroughput(10L, 10L))
+                    .withProvisionedThroughput(ProvisionedThroughput(1L, 1L))
 
             dynamoDb.client.createTable(createTableRequest)
         }
@@ -52,7 +52,7 @@ internal class DynamoDbIntegrationTestExtension : BeforeAllCallback {
 
     @Configuration
     @Profile("dev")
-    class TestDynamoDbConfig {
+    internal class TestDynamoDbConfig {
         @Bean
         fun amazonDynamoDB(): AmazonDynamoDB {
             return dynamoDb.client

@@ -2,16 +2,17 @@ package dev.vasas.flashbacker.persistence.dynamodb.repository
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import dev.vasas.flashbacker.domain.Memory
 import dev.vasas.flashbacker.persistence.dynamodb.entity.MemoryEntity.Companion.memoryTableName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
+import dev.vasas.flashbacker.testtooling.johnsAwesomeMemory
+import dev.vasas.flashbacker.testtooling.johnsGreatMemory
+import dev.vasas.flashbacker.testtooling.johnsNiceMemory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
-import java.time.LocalDateTime
 
 @DynamoDbIntegrationTest
 internal class DynamoDbMemoryRepositoryTest(
@@ -19,40 +20,29 @@ internal class DynamoDbMemoryRepositoryTest(
         @Autowired private val dynamoDbMemoryRepository: DynamoDbMemoryRepository
 ) {
 
-    val testMemory = Memory(
-            id = "testId",
-            userName = "testUser",
-            location = "testLocation",
-            date = LocalDateTime.of(2017, 12, 3, 15, 2, 3, 1000000),
-            text = "hello"
-    )
-
-    val anotherMemory = testMemory.copy(id = "anotherMemory")
-    val thirdMemory = testMemory.copy(id = "thirdMemory")
-
     @AfterEach
     fun cleanUpMemoryTable() {
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(testMemory.id)))
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(anotherMemory.id)))
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(thirdMemory.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsGreatMemory.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsAwesomeMemory.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsNiceMemory.id)))
     }
 
     @Test
     fun `repository finds saved Memory by id`() {
         // given
-        dynamoDbMemoryRepository.save(testMemory)
+        dynamoDbMemoryRepository.save(johnsGreatMemory)
 
         // when
-        val foundMemory = dynamoDbMemoryRepository.findById(testMemory.id)
+        val foundMemory = dynamoDbMemoryRepository.findById(johnsGreatMemory.id)
 
         // then
-        assertThat(foundMemory).isEqualTo(testMemory)
+        assertThat(foundMemory).isEqualTo(johnsGreatMemory)
     }
 
     @Test
     fun `repository returns null when no Memory found for a given id`() {
         // when
-        val searchResult = dynamoDbMemoryRepository.findById(testMemory.id)
+        val searchResult = dynamoDbMemoryRepository.findById(johnsGreatMemory.id)
 
         // then
         assertThat(searchResult).isNull()
@@ -61,32 +51,32 @@ internal class DynamoDbMemoryRepositoryTest(
     @Test
     fun `repository deletes existing Memory`() {
         // given
-        dynamoDbMemoryRepository.save(testMemory)
+        dynamoDbMemoryRepository.save(johnsGreatMemory)
 
         // when
-        dynamoDbMemoryRepository.deleteById(testMemory.id)
+        dynamoDbMemoryRepository.deleteById(johnsGreatMemory.id)
 
         // then
-        assertThat(dynamoDbMemoryRepository.findById(testMemory.id)).isNull()
+        assertThat(dynamoDbMemoryRepository.findById(johnsGreatMemory.id)).isNull()
     }
 
     @Test
     fun `repository throws when trying to delete a non-existing Memory`() {
         assertThrows<EmptyResultDataAccessException> {
-            dynamoDbMemoryRepository.deleteById(testMemory.id)
+            dynamoDbMemoryRepository.deleteById(johnsGreatMemory.id)
         }
     }
 
     @Test
     fun `repository finds all the memories of a user`() {
         // given
-        dynamoDbMemoryRepository.save(testMemory)
-        dynamoDbMemoryRepository.save(anotherMemory)
-        dynamoDbMemoryRepository.save(thirdMemory)
+        dynamoDbMemoryRepository.save(johnsGreatMemory)
+        dynamoDbMemoryRepository.save(johnsAwesomeMemory)
+        dynamoDbMemoryRepository.save(johnsNiceMemory)
 
         // when
-        val memoriesOfAUser = dynamoDbMemoryRepository.findMemoriesForUser(testMemory.userName)
+        val memoriesOfAUser = dynamoDbMemoryRepository.findMemoriesForUser(johnsGreatMemory.userName)
 
-        assertThat(memoriesOfAUser.toSet()).isEqualTo(setOf(testMemory, anotherMemory, thirdMemory))
+        assertThat(memoriesOfAUser.toSet()).isEqualTo(setOf(johnsGreatMemory, johnsAwesomeMemory, johnsNiceMemory))
     }
 }

@@ -63,5 +63,6 @@ jib {
 }
 
 detekt {
+	input = files("src/")
 	config = files("src/test/resources/detekt-config.yml")
 }

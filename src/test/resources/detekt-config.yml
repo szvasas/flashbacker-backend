@@ -431,6 +431,7 @@ style:
     maxJumpCount: 1
   MagicNumber:
     active: true
+    excludes: "**/TestObjects.kt"
     ignoreNumbers: '-1,0,1,2'
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: false
