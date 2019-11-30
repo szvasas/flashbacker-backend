@@ -78,6 +78,7 @@ complexity:
     threshold: 4
   StringLiteralDuplication:
     active: true
+    excludes: "**/*Test.kt"
     threshold: 3
     ignoreAnnotation: true
     excludeStringsWithLessThan5Characters: true
@@ -200,7 +201,7 @@ formatting:
     continuationIndentSize: 4
   MaximumLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 180
   ModifierOrdering:
     active: true
     autoCorrect: true
@@ -445,7 +446,7 @@ style:
     active: false
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 180
     excludePackageStatements: true
     excludeImportStatements: true
     excludeCommentStatements: false
