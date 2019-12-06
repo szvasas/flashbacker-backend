@@ -52,12 +52,30 @@ internal class MemoryControllerTest(
             status { isOk }
             content {
                 contentType(MediaTypes.HAL_JSON)
-                string("{\"_embedded\":{\"memories\":[" +
-                        "{\"id\":\"test-id-2\",\"userName\":\"John\",\"location\":\"Home\",\"date\":\"2017-11-23T15:02:03.001\",\"text\":\"Awesome stuff\"," +
-                        "\"_links\":{\"self\":{\"href\":\"http://localhost/memories/test-id-2\"}}}," +
-                        "{\"id\":\"test-id-1\",\"userName\":\"John\",\"location\":\"The Beach\",\"date\":\"2017-12-03T15:02:03.001\",\"text\":\"Great things\"," +
-                        "\"_links\":{\"self\":{\"href\":\"http://localhost/memories/test-id-1\"}}}]}," +
-                        "\"_links\":{\"self\":{\"href\":\"http://localhost/memories\"}}}")
+                json("""
+                    {"_embedded":{
+                        "memories":[
+                          {
+                            "id":"test-id-2",
+                            "userName":"John",
+                            "location":"Home",
+                            "date":"2017-11-23T15:02:03.001",
+                            "text":"Awesome stuff",
+                            "_links":{"self":{"href":"http://localhost/memories/test-id-2"}
+                            }
+                          },
+                          {
+                            "id":"test-id-1",
+                            "userName":"John",
+                            "location":"The Beach",
+                            "date":"2017-12-03T15:02:03.001",
+                            "text":"Great things",
+                            "_links":{"self":{"href":"http://localhost/memories/test-id-1"}
+                            }
+                          }
+                        ]
+                      },"_links":{"self":{"href":"http://localhost/memories"}}}
+                """)
             }
             jsonPath("$._links.self.href") {
                 value("http://localhost/memories")
@@ -89,7 +107,15 @@ internal class MemoryControllerTest(
             status { isOk }
             content {
                 contentType(MediaTypes.HAL_JSON)
-                string("{\"_links\":{\"self\":{\"href\":\"http://localhost/memories\"}}}")
+                json("""
+                    {
+                      "_links":{
+                        "self":{
+                          "href":"http://localhost/memories"
+                        }
+                      }
+                    }
+                """)
             }
         }.andDo {
             print()
@@ -132,8 +158,20 @@ internal class MemoryControllerTest(
             status { isOk }
             content {
                 contentType(MediaTypes.HAL_JSON)
-                string("{\"id\":\"test-id-2\",\"userName\":\"John\",\"location\":\"Home\",\"date\":\"2017-11-23T15:02:03.001\",\"text\":\"Awesome stuff\"" +
-                        ",\"_links\":{\"self\":{\"href\":\"http://localhost/memories/test-id-2\"}}}")
+                json("""
+                    {
+                      "id":"test-id-2",
+                      "userName":"John",
+                      "location":"Home",
+                      "date":"2017-11-23T15:02:03.001",
+                      "text":"Awesome stuff",
+                      "_links":{
+                        "self":{
+                          "href":"http://localhost/memories/test-id-2"
+                        }
+                      }
+                    }
+                """.trimIndent())
             }
         }.andDo {
             print()
@@ -155,7 +193,7 @@ internal class MemoryControllerTest(
 
         mockMvc.post("/memories") {
             contentType = MediaType.APPLICATION_JSON
-            content = "{\"id\":\"test-id-2\",\"userName\":\"John\",\"location\":\"Home\",\"date\":\"2017-11-23T15:02:03.001\",\"text\":\"Awesome stuff\"}"
+            content = """{"id":"test-id-2","userName":"John","location":"Home","date":"2017-11-23T15:02:03.001","text":"Awesome stuff"}"""
         }.andExpect {
             status { isCreated }
         }.andDo {
