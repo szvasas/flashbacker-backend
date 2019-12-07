@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.security.Principal
 
 @RestController
 @RequestMapping(path = ["/memories"], produces = [MediaTypes.HAL_JSON_VALUE])
@@ -28,18 +29,18 @@ class MemoryController(
 ) {
 
     @GetMapping
-    fun listMemories(): CollectionModel<MemoryModel> {
-        val foundMemories = memoryRepo.findMemoriesForUser("John")
+    fun listMemories(principal: Principal): CollectionModel<MemoryModel> {
+        val foundMemories = memoryRepo.findMemoriesForUser(principal.name)
         val result = toCollectionModel(foundMemories)
-        val selfRel = linkTo<MemoryController> { listMemories() }.withRel(IanaLinkRelations.SELF)
+        val selfRel = linkTo<MemoryController> { listMemories(principal) }.withRel(IanaLinkRelations.SELF)
         result.add(selfRel)
         return result
     }
 
     @GetMapping("/{id}")
-    fun findMemory(@PathVariable id: String): ResponseEntity<MemoryModel?> {
+    fun findMemory(principal: Principal, @PathVariable id: String): ResponseEntity<MemoryModel?> {
         val foundMemory = memoryRepo.findById(id)
-        return if (foundMemory?.userName == "John") {
+        return if (foundMemory != null && foundMemory.userId == principal.name) {
             ResponseEntity(toModel(foundMemory), HttpStatus.OK)
         } else {
             ResponseEntity<MemoryModel?>(null, HttpStatus.NOT_FOUND)
@@ -48,10 +49,10 @@ class MemoryController(
 
     @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.CREATED)
-    fun createNewMemory(@RequestBody newMemoryModel: MemoryModel) {
+    fun createNewMemory(principal: Principal, @RequestBody newMemoryModel: MemoryModel) {
         val newMemory = Memory(
                 id = newMemoryModel.id,
-                userName = newMemoryModel.userName,
+                userId = principal.name,
                 location = newMemoryModel.location,
                 date = newMemoryModel.date,
                 text = newMemoryModel.text
@@ -62,7 +63,10 @@ class MemoryController(
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteById(@PathVariable id: String) {
-        memoryRepo.deleteById(id)
+    fun deleteById(principal: Principal, @PathVariable id: String) {
+        val storedMemory = memoryRepo.findById(id)
+        if (storedMemory != null && storedMemory.userId == principal.name) {
+            memoryRepo.deleteById(id)
+        }
     }
 }

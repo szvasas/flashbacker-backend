@@ -7,7 +7,6 @@ import java.time.LocalDateTime
 @Relation(itemRelation = "memory", collectionRelation = "memories")
 data class MemoryModel(
         val id: String,
-        val userName: String,
         val location: String,
         val date: LocalDateTime,
         val text: String

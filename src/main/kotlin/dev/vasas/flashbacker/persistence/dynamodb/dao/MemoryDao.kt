@@ -7,5 +7,5 @@ import org.springframework.data.repository.CrudRepository
 @EnableScan
 interface MemoryDao : CrudRepository<MemoryEntity, String> {
 
-    fun findByUserName(userName: String): List<MemoryEntity>
+    fun findByUserId(userId: String): List<MemoryEntity>
 }

@@ -13,7 +13,6 @@ object MemoryModelAssembler : RepresentationModelAssemblerSupport<Memory, Memory
     override fun instantiateModel(entity: Memory): MemoryModel {
         return MemoryModel(
                 id = entity.id,
-                userName = entity.userName,
                 location = entity.location,
                 date = entity.date,
                 text = entity.text

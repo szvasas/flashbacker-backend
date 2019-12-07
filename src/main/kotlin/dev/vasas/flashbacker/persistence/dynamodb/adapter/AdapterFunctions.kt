@@ -9,7 +9,7 @@ import java.time.ZoneOffset
 fun Memory.toMemoryEntity(): MemoryEntity {
     return MemoryEntity(
             id = this.id,
-            userName = this.userName,
+            userId = this.userId,
             location = this.location,
             date = this.date.toInstant(ZoneOffset.UTC).toEpochMilli(),
             text = this.text
@@ -19,7 +19,7 @@ fun Memory.toMemoryEntity(): MemoryEntity {
 fun MemoryEntity.toMemory(): Memory {
     return Memory(
             id = this.id ?: "",
-            userName = this.userName ?: "",
+            userId = this.userId ?: "",
             location = this.location ?: "",
             date = this.date?.let {
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneOffset.UTC)

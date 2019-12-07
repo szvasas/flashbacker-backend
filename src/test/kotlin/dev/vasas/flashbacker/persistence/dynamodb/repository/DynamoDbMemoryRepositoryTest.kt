@@ -4,9 +4,9 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import dev.vasas.flashbacker.persistence.dynamodb.entity.MemoryEntity.Companion.memoryTableName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
-import dev.vasas.flashbacker.testtooling.johnsAwesomeMemory
-import dev.vasas.flashbacker.testtooling.johnsGreatMemory
-import dev.vasas.flashbacker.testtooling.johnsNiceMemory
+import dev.vasas.flashbacker.testtooling.awesomeMemoryOfBob
+import dev.vasas.flashbacker.testtooling.greatMemoryOfBob
+import dev.vasas.flashbacker.testtooling.niceMemoryOfBob
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -22,27 +22,27 @@ internal class DynamoDbMemoryRepositoryTest(
 
     @AfterEach
     fun cleanUpMemoryTable() {
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsGreatMemory.id)))
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsAwesomeMemory.id)))
-        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(johnsNiceMemory.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(greatMemoryOfBob.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(awesomeMemoryOfBob.id)))
+        dynamoDb.deleteItem(memoryTableName, mapOf("id" to AttributeValue(niceMemoryOfBob.id)))
     }
 
     @Test
     fun `repository finds saved Memory by id`() {
         // given
-        dynamoDbMemoryRepository.save(johnsGreatMemory)
+        dynamoDbMemoryRepository.save(greatMemoryOfBob)
 
         // when
-        val foundMemory = dynamoDbMemoryRepository.findById(johnsGreatMemory.id)
+        val foundMemory = dynamoDbMemoryRepository.findById(greatMemoryOfBob.id)
 
         // then
-        assertThat(foundMemory).isEqualTo(johnsGreatMemory)
+        assertThat(foundMemory).isEqualTo(greatMemoryOfBob)
     }
 
     @Test
     fun `repository returns null when no Memory found for a given id`() {
         // when
-        val searchResult = dynamoDbMemoryRepository.findById(johnsGreatMemory.id)
+        val searchResult = dynamoDbMemoryRepository.findById(greatMemoryOfBob.id)
 
         // then
         assertThat(searchResult).isNull()
@@ -51,32 +51,32 @@ internal class DynamoDbMemoryRepositoryTest(
     @Test
     fun `repository deletes existing Memory`() {
         // given
-        dynamoDbMemoryRepository.save(johnsGreatMemory)
+        dynamoDbMemoryRepository.save(greatMemoryOfBob)
 
         // when
-        dynamoDbMemoryRepository.deleteById(johnsGreatMemory.id)
+        dynamoDbMemoryRepository.deleteById(greatMemoryOfBob.id)
 
         // then
-        assertThat(dynamoDbMemoryRepository.findById(johnsGreatMemory.id)).isNull()
+        assertThat(dynamoDbMemoryRepository.findById(greatMemoryOfBob.id)).isNull()
     }
 
     @Test
     fun `repository throws when trying to delete a non-existing Memory`() {
         assertThrows<EmptyResultDataAccessException> {
-            dynamoDbMemoryRepository.deleteById(johnsGreatMemory.id)
+            dynamoDbMemoryRepository.deleteById(greatMemoryOfBob.id)
         }
     }
 
     @Test
     fun `repository finds all the memories of a user`() {
         // given
-        dynamoDbMemoryRepository.save(johnsGreatMemory)
-        dynamoDbMemoryRepository.save(johnsAwesomeMemory)
-        dynamoDbMemoryRepository.save(johnsNiceMemory)
+        dynamoDbMemoryRepository.save(greatMemoryOfBob)
+        dynamoDbMemoryRepository.save(awesomeMemoryOfBob)
+        dynamoDbMemoryRepository.save(niceMemoryOfBob)
 
         // when
-        val memoriesOfAUser = dynamoDbMemoryRepository.findMemoriesForUser(johnsGreatMemory.userName)
+        val memoriesOfAUser = dynamoDbMemoryRepository.findMemoriesForUser(greatMemoryOfBob.userId)
 
-        assertThat(memoriesOfAUser.toSet()).isEqualTo(setOf(johnsGreatMemory, johnsAwesomeMemory, johnsNiceMemory))
+        assertThat(memoriesOfAUser.toSet()).isEqualTo(setOf(greatMemoryOfBob, awesomeMemoryOfBob, niceMemoryOfBob))
     }
 }

@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class Memory(
         val id: String,
-        val userName: String,
+        val userId: String,
         val location: String,
         val date: LocalDateTime,
         val text: String

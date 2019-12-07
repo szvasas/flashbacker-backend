@@ -12,7 +12,7 @@ data class MemoryEntity(
         var id: String? = null,
 
         @DynamoDBAttribute
-        var userName: String? = null,
+        var userId: String? = null,
 
         @DynamoDBAttribute
         var location: String? = null,

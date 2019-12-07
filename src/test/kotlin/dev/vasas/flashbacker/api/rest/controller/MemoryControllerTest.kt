@@ -1,8 +1,10 @@
 package dev.vasas.flashbacker.api.rest.controller
 
 import dev.vasas.flashbacker.domain.repository.MemoryRepository
-import dev.vasas.flashbacker.testtooling.johnsAwesomeMemory
-import dev.vasas.flashbacker.testtooling.johnsGreatMemory
+import dev.vasas.flashbacker.testtooling.USER_ID_OF_BOB
+import dev.vasas.flashbacker.testtooling.awesomeMemoryOfBob
+import dev.vasas.flashbacker.testtooling.greatMemoryOfBob
+import dev.vasas.flashbacker.testtooling.niceMemoryOfAlice
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -15,12 +17,15 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.hateoas.MediaTypes
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
 @WebMvcTest(controllers = [MemoryController::class])
+@WithMockUser(USER_ID_OF_BOB)
 internal class MemoryControllerTest(
         @Autowired private val mockMvc: MockMvc
 ) {
@@ -44,8 +49,8 @@ internal class MemoryControllerTest(
     fun `GET to memories endpoint returns all the memories from the database with status code 200`() {
         // given
         every {
-            mockMemoryRepository.findMemoriesForUser("John")
-        } returns listOf(johnsAwesomeMemory, johnsGreatMemory)
+            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
+        } returns listOf(awesomeMemoryOfBob, greatMemoryOfBob)
 
         mockMvc.get("/memories") {
         }.andExpect {
@@ -57,7 +62,6 @@ internal class MemoryControllerTest(
                         "memories":[
                           {
                             "id":"test-id-2",
-                            "userName":"John",
                             "location":"Home",
                             "date":"2017-11-23T15:02:03.001",
                             "text":"Awesome stuff",
@@ -66,7 +70,6 @@ internal class MemoryControllerTest(
                           },
                           {
                             "id":"test-id-1",
-                            "userName":"John",
                             "location":"The Beach",
                             "date":"2017-12-03T15:02:03.001",
                             "text":"Great things",
@@ -91,7 +94,7 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findMemoriesForUser("John")
+            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
         }
     }
 
@@ -99,7 +102,7 @@ internal class MemoryControllerTest(
     fun `given no memories in the database GET to memories endpoint returns a response with status code 200 and links only`() {
         // given
         every {
-            mockMemoryRepository.findMemoriesForUser("John")
+            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
         } returns emptyList()
 
         mockMvc.get("/memories") {
@@ -122,7 +125,7 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findMemoriesForUser("John")
+            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
         }
     }
 
@@ -130,10 +133,10 @@ internal class MemoryControllerTest(
     fun `given no memory is found for a specific id GET to memories slash {id} endpoint returns an empty response with status code 404`() {
         // given
         every {
-            mockMemoryRepository.findById(johnsAwesomeMemory.id)
+            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
         } returns null
 
-        mockMvc.get("/memories/${johnsAwesomeMemory.id}") {
+        mockMvc.get("/memories/${awesomeMemoryOfBob.id}") {
         }.andExpect {
             status { isNotFound }
             content { string("") }
@@ -142,7 +145,7 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findById(johnsAwesomeMemory.id)
+            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
         }
     }
 
@@ -150,10 +153,10 @@ internal class MemoryControllerTest(
     fun `GET to memories slash {id} endpoint returns the memory with status code 200 and links`() {
         // given
         every {
-            mockMemoryRepository.findById(johnsAwesomeMemory.id)
-        } returns johnsAwesomeMemory
+            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+        } returns awesomeMemoryOfBob
 
-        mockMvc.get("/memories/${johnsAwesomeMemory.id}") {
+        mockMvc.get("/memories/${awesomeMemoryOfBob.id}") {
         }.andExpect {
             status { isOk }
             content {
@@ -161,7 +164,6 @@ internal class MemoryControllerTest(
                 json("""
                     {
                       "id":"test-id-2",
-                      "userName":"John",
                       "location":"Home",
                       "date":"2017-11-23T15:02:03.001",
                       "text":"Awesome stuff",
@@ -178,7 +180,7 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findById(johnsAwesomeMemory.id)
+            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
         }
     }
 
@@ -186,14 +188,15 @@ internal class MemoryControllerTest(
     fun `POST to memories endpoint saves the memory and returns status code 201`() {
         // given
         every {
-            mockMemoryRepository.save(johnsAwesomeMemory)
+            mockMemoryRepository.save(awesomeMemoryOfBob)
         } answers {
-            johnsAwesomeMemory
+            awesomeMemoryOfBob
         }
 
         mockMvc.post("/memories") {
+            with(csrf())
             contentType = MediaType.APPLICATION_JSON
-            content = """{"id":"test-id-2","userName":"John","location":"Home","date":"2017-11-23T15:02:03.001","text":"Awesome stuff"}"""
+            content = """{"id":"test-id-2","location":"Home","date":"2017-11-23T15:02:03.001","text":"Awesome stuff"}"""
         }.andExpect {
             status { isCreated }
         }.andDo {
@@ -201,19 +204,25 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.save(johnsAwesomeMemory)
+            mockMemoryRepository.save(awesomeMemoryOfBob)
         }
     }
 
     @Test
     fun `DELETE to memories slash {id} endpoint deletes the memory with correct id and returns status code 204`() {
         every {
-            mockMemoryRepository.deleteById(johnsAwesomeMemory.id)
+            mockMemoryRepository.deleteById(awesomeMemoryOfBob.id)
         } answers {
             nothing
         }
+        every {
+            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+        } answers {
+            awesomeMemoryOfBob
+        }
 
-        mockMvc.delete("/memories/${johnsAwesomeMemory.id}") {
+        mockMvc.delete("/memories/${awesomeMemoryOfBob.id}") {
+            with(csrf())
         }.andExpect {
             status { isNoContent }
         }.andDo {
@@ -221,7 +230,30 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.deleteById(johnsAwesomeMemory.id)
+            mockMemoryRepository.deleteById(awesomeMemoryOfBob.id)
         }
     }
+
+    @Test
+    fun `a logged in user cannot delete memories of other users`() {
+        // given
+        every {
+            mockMemoryRepository.findById(niceMemoryOfAlice.id)
+        } answers {
+            niceMemoryOfAlice
+        }
+
+        mockMvc.delete("/memories/${niceMemoryOfAlice.id}") {
+            with(csrf())
+        }.andExpect {
+            status { isNoContent }
+        }.andDo {
+            print()
+        }
+
+        verify(exactly = 0) {
+            mockMemoryRepository.deleteById(niceMemoryOfAlice.id)
+        }
+    }
+
 }

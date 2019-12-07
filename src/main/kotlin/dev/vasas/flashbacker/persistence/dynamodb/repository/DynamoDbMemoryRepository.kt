@@ -26,6 +26,6 @@ class DynamoDbMemoryRepository(@Autowired private val memoryDao: MemoryDao) : Me
     }
 
     override fun findMemoriesForUser(userName: String): List<Memory> {
-        return memoryDao.findByUserName(userName).map { it.toMemory() }
+        return memoryDao.findByUserId(userName).map { it.toMemory() }
     }
 }
