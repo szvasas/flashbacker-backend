@@ -1,10 +1,11 @@
 package dev.vasas.flashbacker.api.rest.controller
 
-import dev.vasas.flashbacker.domain.repository.MemoryRepository
+import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel
+import dev.vasas.flashbacker.domain.repository.StoryRepository
 import dev.vasas.flashbacker.testtooling.USER_ID_OF_BOB
-import dev.vasas.flashbacker.testtooling.awesomeMemoryOfBob
-import dev.vasas.flashbacker.testtooling.greatMemoryOfBob
-import dev.vasas.flashbacker.testtooling.niceMemoryOfAlice
+import dev.vasas.flashbacker.testtooling.awesomeStoryOfBob
+import dev.vasas.flashbacker.testtooling.greatStoryOfBob
+import dev.vasas.flashbacker.testtooling.niceStoryOfAlice
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -24,48 +25,48 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
-@WebMvcTest(controllers = [MemoryController::class])
+@WebMvcTest(controllers = [StoryController::class])
 @WithMockUser(USER_ID_OF_BOB)
-internal class MemoryControllerTest(
+internal class StoryControllerTest(
         @Autowired private val mockMvc: MockMvc
 ) {
 
     companion object {
-        val mockMemoryRepository = mockk<MemoryRepository>()
+        val mockStoryRepository = mockk<StoryRepository>()
     }
 
     @TestConfiguration
-    internal class MemoryControllerTestConfig {
+    internal class ControllerTestConfig {
         @Bean
-        fun memoryRepository() = mockMemoryRepository
+        fun storyRepository() = mockStoryRepository
     }
 
     @BeforeEach
     fun clearMocks() {
-        clearMocks(mockMemoryRepository)
+        clearMocks(mockStoryRepository)
     }
 
     @Test
-    fun `GET to memories endpoint returns all the memories from the database with status code 200`() {
+    fun `GET to stories endpoint returns all the stories from the database with status code 200`() {
         // given
         every {
-            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
-        } returns listOf(awesomeMemoryOfBob, greatMemoryOfBob)
+            mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
+        } returns listOf(awesomeStoryOfBob, greatStoryOfBob)
 
-        mockMvc.get("/memories") {
+        mockMvc.get("/${StoryModel.collectionRelationName}") {
         }.andExpect {
             status { isOk }
             content {
                 contentType(MediaTypes.HAL_JSON)
                 json("""
                     {"_embedded":{
-                        "memories":[
+                        "stories":[
                           {
                             "id":"test-id-2",
                             "location":"Home",
                             "date":"2017-11-23T15:02:03.001",
                             "text":"Awesome stuff",
-                            "_links":{"self":{"href":"http://localhost/memories/test-id-2"}
+                            "_links":{"self":{"href":"http://localhost/stories/test-id-2"}
                             }
                           },
                           {
@@ -73,39 +74,39 @@ internal class MemoryControllerTest(
                             "location":"The Beach",
                             "date":"2017-12-03T15:02:03.001",
                             "text":"Great things",
-                            "_links":{"self":{"href":"http://localhost/memories/test-id-1"}
+                            "_links":{"self":{"href":"http://localhost/stories/test-id-1"}
                             }
                           }
                         ]
-                      },"_links":{"self":{"href":"http://localhost/memories"}}}
+                      },"_links":{"self":{"href":"http://localhost/stories"}}}
                 """)
             }
             jsonPath("$._links.self.href") {
-                value("http://localhost/memories")
+                value("http://localhost/stories")
             }
-            jsonPath("$._embedded.memories[?(@.id=='test-id-1')]._links.self.href") {
-                value("http://localhost/memories/test-id-1")
+            jsonPath("$._embedded.stories[?(@.id=='test-id-1')]._links.self.href") {
+                value("http://localhost/stories/test-id-1")
             }
-            jsonPath("$._embedded.memories[?(@.id=='test-id-2')]._links.self.href") {
-                value("http://localhost/memories/test-id-2")
+            jsonPath("$._embedded.stories[?(@.id=='test-id-2')]._links.self.href") {
+                value("http://localhost/stories/test-id-2")
             }
         }.andDo {
             print()
         }
 
         verify {
-            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
+            mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
         }
     }
 
     @Test
-    fun `given no memories in the database GET to memories endpoint returns a response with status code 200 and links only`() {
+    fun `given no stories in the database GET to stories endpoint returns a response with status code 200 and links only`() {
         // given
         every {
-            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
+            mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
         } returns emptyList()
 
-        mockMvc.get("/memories") {
+        mockMvc.get("/${StoryModel.collectionRelationName}") {
         }.andExpect {
             status { isOk }
             content {
@@ -114,7 +115,7 @@ internal class MemoryControllerTest(
                     {
                       "_links":{
                         "self":{
-                          "href":"http://localhost/memories"
+                          "href":"http://localhost/stories"
                         }
                       }
                     }
@@ -125,18 +126,18 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findMemoriesForUser(USER_ID_OF_BOB)
+            mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
         }
     }
 
     @Test
-    fun `given no memory is found for a specific id GET to memories slash {id} endpoint returns an empty response with status code 404`() {
+    fun `given no story is found for a specific id GET to stories slash {id} endpoint returns an empty response with status code 404`() {
         // given
         every {
-            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+            mockStoryRepository.findById(awesomeStoryOfBob.id)
         } returns null
 
-        mockMvc.get("/memories/${awesomeMemoryOfBob.id}") {
+        mockMvc.get("/${StoryModel.collectionRelationName}/${awesomeStoryOfBob.id}") {
         }.andExpect {
             status { isNotFound }
             content { string("") }
@@ -145,18 +146,18 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+            mockStoryRepository.findById(awesomeStoryOfBob.id)
         }
     }
 
     @Test
-    fun `GET to memories slash {id} endpoint returns the memory with status code 200 and links`() {
+    fun `GET to stories slash {id} endpoint returns the story with status code 200 and links`() {
         // given
         every {
-            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
-        } returns awesomeMemoryOfBob
+            mockStoryRepository.findById(awesomeStoryOfBob.id)
+        } returns awesomeStoryOfBob
 
-        mockMvc.get("/memories/${awesomeMemoryOfBob.id}") {
+        mockMvc.get("/${StoryModel.collectionRelationName}/${awesomeStoryOfBob.id}") {
         }.andExpect {
             status { isOk }
             content {
@@ -169,7 +170,7 @@ internal class MemoryControllerTest(
                       "text":"Awesome stuff",
                       "_links":{
                         "self":{
-                          "href":"http://localhost/memories/test-id-2"
+                          "href":"http://localhost/stories/test-id-2"
                         }
                       }
                     }
@@ -180,20 +181,20 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+            mockStoryRepository.findById(awesomeStoryOfBob.id)
         }
     }
 
     @Test
-    fun `POST to memories endpoint saves the memory and returns status code 201`() {
+    fun `POST to stories endpoint saves the story and returns status code 201`() {
         // given
         every {
-            mockMemoryRepository.save(awesomeMemoryOfBob)
+            mockStoryRepository.save(awesomeStoryOfBob)
         } answers {
-            awesomeMemoryOfBob
+            awesomeStoryOfBob
         }
 
-        mockMvc.post("/memories") {
+        mockMvc.post("/${StoryModel.collectionRelationName}") {
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
             content = """{"id":"test-id-2","location":"Home","date":"2017-11-23T15:02:03.001","text":"Awesome stuff"}"""
@@ -204,24 +205,24 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.save(awesomeMemoryOfBob)
+            mockStoryRepository.save(awesomeStoryOfBob)
         }
     }
 
     @Test
-    fun `DELETE to memories slash {id} endpoint deletes the memory with correct id and returns status code 204`() {
+    fun `DELETE to stories slash {id} endpoint deletes the story with correct id and returns status code 204`() {
         every {
-            mockMemoryRepository.deleteById(awesomeMemoryOfBob.id)
+            mockStoryRepository.deleteById(awesomeStoryOfBob.id)
         } answers {
             nothing
         }
         every {
-            mockMemoryRepository.findById(awesomeMemoryOfBob.id)
+            mockStoryRepository.findById(awesomeStoryOfBob.id)
         } answers {
-            awesomeMemoryOfBob
+            awesomeStoryOfBob
         }
 
-        mockMvc.delete("/memories/${awesomeMemoryOfBob.id}") {
+        mockMvc.delete("/${StoryModel.collectionRelationName}/${awesomeStoryOfBob.id}") {
             with(csrf())
         }.andExpect {
             status { isNoContent }
@@ -230,20 +231,20 @@ internal class MemoryControllerTest(
         }
 
         verify {
-            mockMemoryRepository.deleteById(awesomeMemoryOfBob.id)
+            mockStoryRepository.deleteById(awesomeStoryOfBob.id)
         }
     }
 
     @Test
-    fun `a logged in user cannot delete memories of other users`() {
+    fun `a logged in user cannot delete stories of other users`() {
         // given
         every {
-            mockMemoryRepository.findById(niceMemoryOfAlice.id)
+            mockStoryRepository.findById(niceStoryOfAlice.id)
         } answers {
-            niceMemoryOfAlice
+            niceStoryOfAlice
         }
 
-        mockMvc.delete("/memories/${niceMemoryOfAlice.id}") {
+        mockMvc.delete("/${StoryModel.collectionRelationName}/${niceStoryOfAlice.id}") {
             with(csrf())
         }.andExpect {
             status { isNoContent }
@@ -252,7 +253,7 @@ internal class MemoryControllerTest(
         }
 
         verify(exactly = 0) {
-            mockMemoryRepository.deleteById(niceMemoryOfAlice.id)
+            mockStoryRepository.deleteById(niceStoryOfAlice.id)
         }
     }
 

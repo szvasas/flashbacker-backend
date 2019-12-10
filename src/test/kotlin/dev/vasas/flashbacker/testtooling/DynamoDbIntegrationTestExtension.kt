@@ -7,6 +7,7 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement
 import com.amazonaws.services.dynamodbv2.model.KeyType
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType
+import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.context.annotation.Bean
@@ -41,7 +42,7 @@ internal class DynamoDbIntegrationTestExtension : BeforeAllCallback {
 
         private fun createTables() {
             val createTableRequest = CreateTableRequest()
-                    .withTableName("memory")
+                    .withTableName(StoryEntity.storyTableName)
                     .withKeySchema(KeySchemaElement("id", KeyType.HASH))
                     .withAttributeDefinitions(AttributeDefinition("id", ScalarAttributeType.S))
                     .withProvisionedThroughput(ProvisionedThroughput(1L, 1L))

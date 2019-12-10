@@ -2,7 +2,7 @@ package dev.vasas.flashbacker.domain
 
 import java.time.LocalDateTime
 
-data class Memory(
+data class Story(
         val id: String,
         val userId: String,
         val location: String,

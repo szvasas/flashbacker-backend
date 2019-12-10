@@ -1,6 +1,7 @@
 package dev.vasas.flashbacker.api.rest.controller
 
-import dev.vasas.flashbacker.domain.repository.MemoryRepository
+import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel
+import dev.vasas.flashbacker.domain.repository.StoryRepository
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,32 +14,32 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
-@WebMvcTest(controllers = [MemoryController::class])
-internal class MemoryControllerUnauthenticatedAccessTest(
+@WebMvcTest(controllers = [StoryController::class])
+internal class StoryControllerUnauthenticatedAccessTest(
         @Autowired private val mockMvc: MockMvc
 ) {
 
     companion object {
-        val mockMemoryRepository = mockk<MemoryRepository>()
+        val mockStoryRepository = mockk<StoryRepository>()
     }
 
     @TestConfiguration
-    internal class MemoryControllerTestConfig {
+    internal class ControllerTestConfig {
         @Bean
-        fun memoryRepository() = mockMemoryRepository
+        fun storyRepository() = mockStoryRepository
     }
 
     @Test
-    fun `unauthenticated GET to memories endpoint returns status code 401`() {
-        mockMvc.get("/memories") {
+    fun `unauthenticated GET to stories endpoint returns status code 401`() {
+        mockMvc.get("/${StoryModel.collectionRelationName}") {
         }.andExpect {
             status { isUnauthorized }
         }
     }
 
     @Test
-    fun `unauthenticated POST to memories endpoint returns status code 401`() {
-        mockMvc.post("/memories") {
+    fun `unauthenticated POST to stories endpoint returns status code 401`() {
+        mockMvc.post("/${StoryModel.collectionRelationName}") {
             with(csrf())
         }.andExpect {
             status { isUnauthorized }
@@ -46,8 +47,8 @@ internal class MemoryControllerUnauthenticatedAccessTest(
     }
 
     @Test
-    fun `unauthenticated DELETE to memories endpoint returns status code 401`() {
-        mockMvc.delete("/memories/anyId") {
+    fun `unauthenticated DELETE to stories endpoint returns status code 401`() {
+        mockMvc.delete("/${StoryModel.collectionRelationName}/anyId") {
             with(csrf())
         }.andExpect {
             status { isUnauthorized }

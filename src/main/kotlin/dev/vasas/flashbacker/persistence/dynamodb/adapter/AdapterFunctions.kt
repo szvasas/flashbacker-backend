@@ -1,13 +1,13 @@
 package dev.vasas.flashbacker.persistence.dynamodb.adapter
 
-import dev.vasas.flashbacker.domain.Memory
-import dev.vasas.flashbacker.persistence.dynamodb.entity.MemoryEntity
+import dev.vasas.flashbacker.domain.Story
+import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-fun Memory.toMemoryEntity(): MemoryEntity {
-    return MemoryEntity(
+fun Story.toStoryEntity(): StoryEntity {
+    return StoryEntity(
             id = this.id,
             userId = this.userId,
             location = this.location,
@@ -16,8 +16,8 @@ fun Memory.toMemoryEntity(): MemoryEntity {
     )
 }
 
-fun MemoryEntity.toMemory(): Memory {
-    return Memory(
+fun StoryEntity.toStory(): Story {
+    return Story(
             id = this.id ?: "",
             userId = this.userId ?: "",
             location = this.location ?: "",
