@@ -4,7 +4,7 @@ import dev.vasas.flashbacker.domain.Story
 
 interface StoryRepository {
 
-    fun save(story: Story): Story
+    fun save(story: Story)
 
     fun deleteById(id: String)
 

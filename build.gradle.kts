@@ -46,7 +46,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
 
     // DynamoDB
-    implementation("com.github.derjust:spring-data-dynamodb:5.1.0")
+    implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.690")
     testImplementation("org.testcontainers:dynalite:1.12.3")
 
     // Other development and test tooling

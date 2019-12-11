@@ -486,6 +486,7 @@ style:
     active: true
   ThrowsCount:
     active: true
+    excludes: "**/*/DynamoDbStoryDao.kt"
     max: 2
   TrailingWhitespace:
     active: true
