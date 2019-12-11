@@ -54,7 +54,7 @@ class StoryController(
                 id = newStoryModel.id,
                 userId = principal.name,
                 location = newStoryModel.location,
-                date = newStoryModel.date,
+                dateHappened = newStoryModel.dateHappened,
                 text = newStoryModel.text
         )
 

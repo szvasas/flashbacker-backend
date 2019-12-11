@@ -14,7 +14,7 @@ object StoryModelAssembler : RepresentationModelAssemblerSupport<Story, StoryMod
         return StoryModel(
                 id = entity.id,
                 location = entity.location,
-                date = entity.date,
+                dateHappened = entity.dateHappened,
                 text = entity.text
         )
     }

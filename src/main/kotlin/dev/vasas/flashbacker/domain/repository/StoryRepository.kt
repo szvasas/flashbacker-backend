@@ -1,6 +1,7 @@
 package dev.vasas.flashbacker.domain.repository
 
 import dev.vasas.flashbacker.domain.Story
+import java.time.LocalDate
 
 interface StoryRepository {
 
@@ -8,7 +9,14 @@ interface StoryRepository {
 
     fun deleteById(id: String)
 
+    fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String)
+
     fun findById(id: String): Story?
 
-    fun findStoriesForUser(userName: String): List<Story>
+    fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story?
+
+    fun findStoriesForUser(userId: String): List<Story>
+
+    fun findStoriesForUserAndDate(userId: String, dateHappened: LocalDate): List<Story>
+
 }

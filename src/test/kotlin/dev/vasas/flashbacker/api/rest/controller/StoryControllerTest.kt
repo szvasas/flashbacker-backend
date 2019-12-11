@@ -64,7 +64,7 @@ internal class StoryControllerTest(
                           {
                             "id":"test-id-2",
                             "location":"Home",
-                            "date":"2017-11-23T15:02:03.001",
+                            "dateHappened":"2017-11-23",
                             "text":"Awesome stuff",
                             "_links":{"self":{"href":"http://localhost/stories/test-id-2"}
                             }
@@ -72,7 +72,7 @@ internal class StoryControllerTest(
                           {
                             "id":"test-id-1",
                             "location":"The Beach",
-                            "date":"2017-12-03T15:02:03.001",
+                            "dateHappened":"2017-12-03",
                             "text":"Great things",
                             "_links":{"self":{"href":"http://localhost/stories/test-id-1"}
                             }
@@ -166,7 +166,7 @@ internal class StoryControllerTest(
                     {
                       "id":"test-id-2",
                       "location":"Home",
-                      "date":"2017-11-23T15:02:03.001",
+                      "dateHappened":"2017-11-23",
                       "text":"Awesome stuff",
                       "_links":{
                         "self":{
@@ -197,7 +197,7 @@ internal class StoryControllerTest(
         mockMvc.post("/${StoryModel.collectionRelationName}") {
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
-            content = """{"id":"test-id-2","location":"Home","date":"2017-11-23T15:02:03.001","text":"Awesome stuff"}"""
+            content = """{"id":"test-id-2","location":"Home","dateHappened":"2017-11-23","text":"Awesome stuff"}"""
         }.andExpect {
             status { isCreated }
         }.andDo {

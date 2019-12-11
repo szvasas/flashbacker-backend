@@ -5,13 +5,16 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator
 import com.amazonaws.services.dynamodbv2.model.Condition
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.dateFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.dateHappenedAndIdFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.idFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.locationFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.storyTableName
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.textFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.timestampAddedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.userIdFieldName
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 @Component
 class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
@@ -22,6 +25,13 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
 
     fun deleteById(id: String) {
         dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(id)))
+    }
+
+    fun deleteByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String) {
+        val itemToDelete = findByUserIdAndDateHappenedAndId(userId, dateHappenedAndId)
+        itemToDelete?.apply {
+            dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(id)))
+        }
     }
 
     fun findById(id: String): StoryEntity? {
@@ -42,23 +52,71 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
                 .map { it.toStoryEntity() }
     }
 
+    fun findByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String): StoryEntity? {
+        // Since getItem works with keys only we had to implement this with scan now.
+        val userEqualToInputCondition = Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(AttributeValue(userId))
+        val dateHappenedAndIdEqualToInputCondition = Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(AttributeValue(dateHappenedAndId))
+
+        return dynamoDb
+                .scan(storyTableName, mapOf(
+                        userIdFieldName to userEqualToInputCondition,
+                        dateHappenedAndIdFieldName to dateHappenedAndIdEqualToInputCondition
+                ))
+                .items
+                .map { it.toStoryEntity() }
+                .firstOrNull()
+    }
+
+    fun findByUserIdAndDateHappened(userId: String, dateHappened: LocalDate): List<StoryEntity> {
+        val userEqualToInputCondition = Condition()
+                .withComparisonOperator(ComparisonOperator.EQ)
+                .withAttributeValueList(AttributeValue(userId))
+        val dateHappenedEqualToInputCondition = Condition()
+                .withComparisonOperator(ComparisonOperator.BEGINS_WITH)
+                .withAttributeValueList(AttributeValue(dateHappened.toString()))
+
+        return dynamoDb
+                .scan(storyTableName, mapOf(
+                        userIdFieldName to userEqualToInputCondition,
+                        dateHappenedAndIdFieldName to dateHappenedEqualToInputCondition
+                ))
+                .items
+                .map { it.toStoryEntity() }
+    }
+
     private fun StoryEntity.toAttributeValueMap(): Map<String, AttributeValue> {
         return mapOf(
                 idFieldName to AttributeValue(id),
                 userIdFieldName to AttributeValue(userId),
+                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId),
                 locationFieldName to AttributeValue(location),
-                dateFieldName to AttributeValue().withN(date.toString()),
+                dateHappenedFieldName to AttributeValue().withN(dateHappened.toString()),
+                timestampAddedFieldName to AttributeValue().withN(timestampAdded.toString()),
                 textFieldName to AttributeValue(text)
         )
     }
 
     private fun Map<String, AttributeValue>.toStoryEntity(): StoryEntity {
         return StoryEntity(
-                id = this[idFieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(idFieldName),
-                userId = this[userIdFieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(userIdFieldName),
-                location = this[locationFieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(locationFieldName),
-                date = this[dateFieldName]?.n?.toLong() ?: throw InvalidDynamoDbItemException.missingMandatoryField(dateFieldName),
-                text = this[textFieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(textFieldName)
+                id = getStringOrThrow(idFieldName),
+                userId = getStringOrThrow(userIdFieldName),
+                dateHappenedAndId = getStringOrThrow(dateHappenedAndIdFieldName),
+                location = getStringOrThrow(locationFieldName),
+                dateHappened = getNumberOrThrow(dateHappenedFieldName),
+                timestampAdded = getNumberOrThrow(timestampAddedFieldName),
+                text = getStringOrThrow(textFieldName)
         )
+    }
+
+    private fun Map<String, AttributeValue>.getStringOrThrow(fieldName: String): String {
+        return this[fieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
+    }
+
+    private fun Map<String, AttributeValue>.getNumberOrThrow(fieldName: String): Long {
+        return this[fieldName]?.n?.toLong() ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
     }
 }

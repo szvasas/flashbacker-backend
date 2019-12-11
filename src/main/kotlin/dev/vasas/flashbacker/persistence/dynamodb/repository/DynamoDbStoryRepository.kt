@@ -6,9 +6,9 @@ import dev.vasas.flashbacker.persistence.dynamodb.dao.DynamoDbStoryDao
 import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @Repository
 class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao) : StoryRepository {
@@ -21,20 +21,34 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         storyDao.deleteById(id)
     }
 
+    override fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String) {
+        storyDao.deleteByUserIdAndDateHappenedAndId(userId, "${dateHappened}_$storyId")
+    }
+
     override fun findById(id: String): Story? {
         return storyDao.findById(id)?.toStory()
     }
 
-    override fun findStoriesForUser(userName: String): List<Story> {
-        return storyDao.findByUserId(userName).map { it.toStory() }
+    override fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story? {
+        return storyDao.findByUserIdAndDateHappenedAndId(userId, "${dateHappened}_$storyId")?.toStory()
+    }
+
+    override fun findStoriesForUser(userId: String): List<Story> {
+        return storyDao.findByUserId(userId).map { it.toStory() }
+    }
+
+    override fun findStoriesForUserAndDate(userId: String, dateHappened: LocalDate): List<Story> {
+        return storyDao.findByUserIdAndDateHappened(userId, dateHappened).map { it.toStory() }
     }
 
     private fun Story.toStoryEntity(): StoryEntity {
         return StoryEntity(
                 id = this.id,
                 userId = this.userId,
+                dateHappenedAndId = "${this.dateHappened}_${this.id}",
                 location = this.location,
-                date = this.date.toInstant(ZoneOffset.UTC).toEpochMilli(),
+                dateHappened = this.dateHappened.toEpochDay(),
+                timestampAdded = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli(),
                 text = this.text
         )
     }
@@ -44,7 +58,7 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
                 id = this.id,
                 userId = this.userId,
                 location = this.location,
-                date = LocalDateTime.ofInstant(Instant.ofEpochMilli(this.date), ZoneOffset.UTC),
+                dateHappened = LocalDate.ofEpochDay(this.dateHappened),
                 text = this.text
         )
     }

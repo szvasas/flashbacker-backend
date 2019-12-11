@@ -1,11 +1,11 @@
 package dev.vasas.flashbacker.domain
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 data class Story(
         val id: String,
         val userId: String,
         val location: String,
-        val date: LocalDateTime,
+        val dateHappened: LocalDate,
         val text: String
 )

@@ -84,7 +84,8 @@ complexity:
     excludeStringsWithLessThan5Characters: true
     ignoreStringsRegex: '$^'
   TooManyFunctions:
-    active: true
+    active: false
+    excludes: "**/*Test.kt"
     thresholdInFiles: 11
     thresholdInClasses: 11
     thresholdInInterfaces: 11
@@ -486,7 +487,6 @@ style:
     active: true
   ThrowsCount:
     active: true
-    excludes: "**/*/DynamoDbStoryDao.kt"
     max: 2
   TrailingWhitespace:
     active: true
