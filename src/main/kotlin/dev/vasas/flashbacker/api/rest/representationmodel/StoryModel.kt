@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 @Relation(itemRelation = StoryModel.itemRelationName, collectionRelation = StoryModel.collectionRelationName)
 data class StoryModel(
-        val id: String,
+        val id: String? = null,
         val location: String,
         val dateHappened: LocalDate,
         val text: String

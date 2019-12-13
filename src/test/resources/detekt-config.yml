@@ -280,6 +280,7 @@ formatting:
 naming:
   active: true
   ClassNaming:
+    excludes: "**/test/**"
     active: true
     classPattern: '[A-Z$][a-zA-Z0-9$]*'
   ConstructorParameterNaming:
@@ -433,7 +434,7 @@ style:
     maxJumpCount: 1
   MagicNumber:
     active: true
-    excludes: "**/TestObjects.kt"
+    excludes: "**/*Test*.kt"
     ignoreNumbers: '-1,0,1,2'
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: false
@@ -456,6 +457,7 @@ style:
   ModifierOrder:
     active: true
   NestedClassesVisibility:
+    excludes: "**/test/**"
     active: true
   NewLineAtEndOfFile:
     active: true

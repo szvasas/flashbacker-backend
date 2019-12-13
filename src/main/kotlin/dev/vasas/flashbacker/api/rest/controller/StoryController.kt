@@ -3,6 +3,7 @@ package dev.vasas.flashbacker.api.rest.controller
 import dev.vasas.flashbacker.api.rest.modelassembler.StoryModelAssembler.toCollectionModel
 import dev.vasas.flashbacker.api.rest.modelassembler.StoryModelAssembler.toModel
 import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel
+import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.repository.StoryRepository
 import org.springframework.hateoas.CollectionModel
@@ -20,11 +21,16 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.security.Principal
+import java.time.DateTimeException
+import java.time.LocalDate
+import java.util.UUID
 
 @RestController
-@RequestMapping(path = ["/${StoryModel.collectionRelationName}"], produces = [MediaTypes.HAL_JSON_VALUE])
+@RequestMapping(path = ["/$collectionRelationName"], produces = [MediaTypes.HAL_JSON_VALUE])
 class StoryController(
+        private val idGenerator: () -> String = { UUID.randomUUID().toString() },
         private val storyRepo: StoryRepository
 ) {
 
@@ -37,10 +43,18 @@ class StoryController(
         return result
     }
 
-    @GetMapping("/{id}")
-    fun findStory(principal: Principal, @PathVariable id: String): ResponseEntity<StoryModel?> {
-        val foundStory = storyRepo.findById(id)
-        return if (foundStory != null && foundStory.userId == principal.name) {
+    @GetMapping("/{year}/{month}/{dayOfMonth}/{id}")
+    fun findStory(
+            principal: Principal,
+            @PathVariable year: Int,
+            @PathVariable month: Int,
+            @PathVariable dayOfMonth: Int,
+            @PathVariable id: String
+    ): ResponseEntity<StoryModel?> {
+        val dateHappened = parseDateHappened(year, month, dayOfMonth)
+
+        val foundStory = storyRepo.findByUserDateHappenedStoryId(principal.name, dateHappened, id)
+        return if (foundStory != null) {
             ResponseEntity(toModel(foundStory), HttpStatus.OK)
         } else {
             ResponseEntity<StoryModel?>(null, HttpStatus.NOT_FOUND)
@@ -51,7 +65,7 @@ class StoryController(
     @ResponseStatus(HttpStatus.CREATED)
     fun createNewStory(principal: Principal, @RequestBody newStoryModel: StoryModel) {
         val newStory = Story(
-                id = newStoryModel.id,
+                id = idGenerator(),
                 userId = principal.name,
                 location = newStoryModel.location,
                 dateHappened = newStoryModel.dateHappened,
@@ -61,12 +75,24 @@ class StoryController(
         storyRepo.save(newStory)
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{year}/{month}/{dayOfMonth}/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteById(principal: Principal, @PathVariable id: String) {
-        val storedStory = storyRepo.findById(id)
-        if (storedStory != null && storedStory.userId == principal.name) {
-            storyRepo.deleteById(id)
+    fun deleteStory(
+            principal: Principal,
+            @PathVariable year: Int,
+            @PathVariable month: Int,
+            @PathVariable dayOfMonth: Int,
+            @PathVariable id: String
+    ) {
+        val dateHappened = parseDateHappened(year, month, dayOfMonth)
+        storyRepo.deleteByUserDateHappenedStoryId(principal.name, dateHappened, id)
+    }
+
+    private fun parseDateHappened(year: Int, month: Int, dayOfMonth: Int): LocalDate {
+        return try {
+            return LocalDate.of(year, month, dayOfMonth)
+        } catch (e: DateTimeException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message, e)
         }
     }
 }

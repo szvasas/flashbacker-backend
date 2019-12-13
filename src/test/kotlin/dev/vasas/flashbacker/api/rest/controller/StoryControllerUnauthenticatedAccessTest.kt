@@ -48,7 +48,7 @@ internal class StoryControllerUnauthenticatedAccessTest(
 
     @Test
     fun `unauthenticated DELETE to stories endpoint returns status code 401`() {
-        mockMvc.delete("/${StoryModel.collectionRelationName}/anyId") {
+        mockMvc.delete("/${StoryModel.collectionRelationName}/2017/12/1/anyId") {
             with(csrf())
         }.andExpect {
             status { isUnauthorized }

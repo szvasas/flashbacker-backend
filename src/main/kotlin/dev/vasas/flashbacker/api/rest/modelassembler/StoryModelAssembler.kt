@@ -20,6 +20,6 @@ object StoryModelAssembler : RepresentationModelAssemblerSupport<Story, StoryMod
     }
 
     override fun toModel(story: Story): StoryModel {
-        return createModelWithId(story.id, story)
+        return createModelWithId("${story.dateHappened.year}/${story.dateHappened.monthValue}/${story.dateHappened.dayOfMonth}/${story.id}", story)
     }
 }
