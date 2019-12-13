@@ -1,7 +1,5 @@
-package dev.vasas.flashbacker.api.rest.modelassembler
+package dev.vasas.flashbacker.api.rest
 
-import dev.vasas.flashbacker.api.rest.controller.StoryController
-import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel
 import dev.vasas.flashbacker.domain.Story
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport
 

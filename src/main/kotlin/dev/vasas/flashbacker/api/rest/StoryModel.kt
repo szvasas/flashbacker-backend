@@ -1,4 +1,4 @@
-package dev.vasas.flashbacker.api.rest.representationmodel
+package dev.vasas.flashbacker.api.rest
 
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.core.Relation

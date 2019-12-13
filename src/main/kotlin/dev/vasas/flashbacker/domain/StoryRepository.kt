@@ -1,6 +1,5 @@
-package dev.vasas.flashbacker.domain.repository
+package dev.vasas.flashbacker.domain
 
-import dev.vasas.flashbacker.domain.Story
 import java.time.LocalDate
 
 interface StoryRepository {

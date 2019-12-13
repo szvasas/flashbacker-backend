@@ -1,4 +1,4 @@
-package dev.vasas.flashbacker.persistence.dynamodb.entity
+package dev.vasas.flashbacker.persistence.dynamodb
 
 data class StoryEntity(
         val id: String,

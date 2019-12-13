@@ -1,9 +1,7 @@
-package dev.vasas.flashbacker.persistence.dynamodb.repository
+package dev.vasas.flashbacker.persistence.dynamodb
 
 import dev.vasas.flashbacker.domain.Story
-import dev.vasas.flashbacker.domain.repository.StoryRepository
-import dev.vasas.flashbacker.persistence.dynamodb.dao.DynamoDbStoryDao
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity
+import dev.vasas.flashbacker.domain.StoryRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDate

@@ -1,16 +1,15 @@
-package dev.vasas.flashbacker.persistence.dynamodb.repository
+package dev.vasas.flashbacker.persistence.dynamodb
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import dev.vasas.flashbacker.persistence.dynamodb.dao.InvalidDynamoDbItemException
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.dateHappenedAndIdFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.dateHappenedFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.idFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.locationFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.storyTableName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.textFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.timestampAddedFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.userIdFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedAndIdFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.locationFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampAddedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
 import dev.vasas.flashbacker.testtooling.awesomeStoryOfBob
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob

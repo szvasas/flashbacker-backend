@@ -7,8 +7,8 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement
 import com.amazonaws.services.dynamodbv2.model.KeyType
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.idFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.entity.StoryEntity.Companion.storyTableName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.context.annotation.Bean

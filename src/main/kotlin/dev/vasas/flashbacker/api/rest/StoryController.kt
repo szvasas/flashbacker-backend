@@ -1,11 +1,10 @@
-package dev.vasas.flashbacker.api.rest.controller
+package dev.vasas.flashbacker.api.rest
 
-import dev.vasas.flashbacker.api.rest.modelassembler.StoryModelAssembler.toCollectionModel
-import dev.vasas.flashbacker.api.rest.modelassembler.StoryModelAssembler.toModel
-import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel
-import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel.Companion.collectionRelationName
+import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toCollectionModel
+import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toModel
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Story
-import dev.vasas.flashbacker.domain.repository.StoryRepository
+import dev.vasas.flashbacker.domain.StoryRepository
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.MediaTypes

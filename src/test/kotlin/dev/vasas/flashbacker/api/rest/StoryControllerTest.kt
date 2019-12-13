@@ -1,8 +1,8 @@
-package dev.vasas.flashbacker.api.rest.controller
+package dev.vasas.flashbacker.api.rest
 
-import dev.vasas.flashbacker.api.rest.representationmodel.StoryModel.Companion.collectionRelationName
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Story
-import dev.vasas.flashbacker.domain.repository.StoryRepository
+import dev.vasas.flashbacker.domain.StoryRepository
 import dev.vasas.flashbacker.testtooling.USER_ID_OF_BOB
 import dev.vasas.flashbacker.testtooling.awesomeStoryOfBob
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
@@ -332,6 +332,36 @@ internal class StoryControllerTest(
                 verify(exactly = 0) {
                     mockStoryRepository.deleteByUserDateHappenedStoryId(any(), any(), any())
                 }
+            }
+        }
+    }
+
+    @Nested
+    inner class `Without authenticated user` {
+
+        @Test
+        fun `GET to stories endpoint returns status code 401`() {
+            mockMvc.get("/${StoryModel.collectionRelationName}") {
+            }.andExpect {
+                status { isUnauthorized }
+            }
+        }
+
+        @Test
+        fun `POST to stories endpoint returns status code 401`() {
+            mockMvc.post("/${StoryModel.collectionRelationName}") {
+                with(csrf())
+            }.andExpect {
+                status { isUnauthorized }
+            }
+        }
+
+        @Test
+        fun `DELETE to stories endpoint returns status code 401`() {
+            mockMvc.delete("/${StoryModel.collectionRelationName}/2017/12/1/anyId") {
+                with(csrf())
+            }.andExpect {
+                status { isUnauthorized }
             }
         }
     }

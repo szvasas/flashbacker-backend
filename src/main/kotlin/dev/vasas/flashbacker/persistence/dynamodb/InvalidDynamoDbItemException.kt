@@ -1,4 +1,4 @@
-package dev.vasas.flashbacker.persistence.dynamodb.dao
+package dev.vasas.flashbacker.persistence.dynamodb
 
 class InvalidDynamoDbItemException(message: String) : RuntimeException(message) {
 
