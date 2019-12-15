@@ -57,9 +57,11 @@ test:
       - .gradle
 
 docker-image-build:
+  only:
+    - master
   stage: package
   script:
-    - ./gradlew jib -Djib.to.image="$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA" -Djib.to.auth.username="$CI_REGISTRY_USER" -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" -Djib.container.creationTime="USE_CURRENT_TIMESTAMP"
+    - ./gradlew jib -Djib.to.image="$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA" -Djib.to.auth.username="$CI_REGISTRY_USER" -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" -Djib.container.creationTime="USE_CURRENT_TIMESTAMP"
   cache:
     key: "$CI_COMMIT_REF_NAME"
     policy: pull
