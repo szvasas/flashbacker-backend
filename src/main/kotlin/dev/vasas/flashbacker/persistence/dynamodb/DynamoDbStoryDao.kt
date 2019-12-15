@@ -22,22 +22,11 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
         dynamoDb.putItem(storyTableName, storyEntity.toAttributeValueMap())
     }
 
-    fun deleteById(id: String) {
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(id)))
-    }
-
     fun deleteByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String) {
-        val itemToDelete = findByUserIdAndDateHappenedAndId(userId, dateHappenedAndId)
-        itemToDelete?.apply {
-            dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(id)))
-        }
-    }
-
-    fun findById(id: String): StoryEntity? {
-        return dynamoDb
-                .getItem(storyTableName, mapOf(idFieldName to AttributeValue(id)))
-                .item
-                ?.toStoryEntity()
+        dynamoDb.deleteItem(storyTableName, mapOf(
+                userIdFieldName to AttributeValue(userId),
+                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId)
+        ))
     }
 
     fun findByUserId(userId: String): List<StoryEntity> {
@@ -52,22 +41,13 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
     }
 
     fun findByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String): StoryEntity? {
-        // Since getItem works with keys only we had to implement this with scan now.
-        val userEqualToInputCondition = Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(AttributeValue(userId))
-        val dateHappenedAndIdEqualToInputCondition = Condition()
-                .withComparisonOperator(ComparisonOperator.EQ)
-                .withAttributeValueList(AttributeValue(dateHappenedAndId))
-
         return dynamoDb
-                .scan(storyTableName, mapOf(
-                        userIdFieldName to userEqualToInputCondition,
-                        dateHappenedAndIdFieldName to dateHappenedAndIdEqualToInputCondition
+                .getItem(storyTableName, mapOf(
+                        userIdFieldName to AttributeValue(userId),
+                        dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId)
                 ))
-                .items
-                .map { it.toStoryEntity() }
-                .firstOrNull()
+                .item
+                ?.toStoryEntity()
     }
 
     fun findByUserIdAndDateHappened(userId: String, dateHappened: LocalDate): List<StoryEntity> {

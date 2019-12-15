@@ -2,6 +2,7 @@ package dev.vasas.flashbacker.persistence.dynamodb
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedAndIdFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
@@ -11,15 +12,18 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFiel
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampAddedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
-import dev.vasas.flashbacker.testtooling.awesomeStoryOfBob
+import dev.vasas.flashbacker.testtooling.allStories
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
 import dev.vasas.flashbacker.testtooling.greatStoryOfBobOnTheSameDay
-import dev.vasas.flashbacker.testtooling.niceStoryOfAlice
-import dev.vasas.flashbacker.testtooling.niceStoryOfBob
+import dev.vasas.flashbacker.testtooling.storiesOfBob
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 
 @DynamoDbIntegrationTest
@@ -29,206 +33,108 @@ internal class DynamoDbStoryRepositoryTest(
 ) {
 
     @AfterEach
-    fun cleanUpStoryTable() {
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(greatStoryOfBob.id)))
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(greatStoryOfBobOnTheSameDay.id)))
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(awesomeStoryOfBob.id)))
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(niceStoryOfBob.id)))
-        dynamoDb.deleteItem(storyTableName, mapOf(idFieldName to AttributeValue(niceStoryOfAlice.id)))
+    fun clearTestData() {
+        allStories.forEach {
+            dynamoDb.deleteItem(storyTableName, mapOf(
+                    userIdFieldName to AttributeValue(it.userId),
+                    dateHappenedAndIdFieldName to AttributeValue(dynamoDbStoryRepository.createCompositeSortKey(it.dateHappened, it.id))
+            ))
+        }
     }
 
-    @Test
-    fun `repository finds saved Story by id`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
+    @Nested
+    inner class `given there are no items in the DB` {
 
-        // when
-        val foundStory = dynamoDbStoryRepository.findById(greatStoryOfBob.id)
+        @Test
+        fun `find method returns null`() {
+            // when
+            val searchResult = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
 
-        // then
-        assertThat(foundStory).isEqualTo(greatStoryOfBob)
+            // then
+            assertThat(searchResult).isNull()
+        }
+
+        @Test
+        fun `delete method does not throw`() {
+            dynamoDbStoryRepository.deleteByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+        }
     }
 
-    @Test
-    fun `repository finds saved Story by userId, dateHappened and storyId`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
+    @Nested
+    inner class `given there are valid items in the DB` {
 
-        // when
-        val foundStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+        @BeforeEach
+        fun loadTestData() {
+            allStories.forEach {
+                dynamoDb.putItem(storyTableName, createAttributeMapFromStory(it))
+            }
+        }
 
-        // then
-        assertThat(foundStory).isEqualTo(greatStoryOfBob)
+        @Test
+        fun `repository finds saved Story by userId, dateHappened and storyId`() {
+            // when
+            val foundStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+
+            // then
+            assertThat(foundStory).isEqualTo(greatStoryOfBob)
+        }
+
+        @Test
+        fun `repository deletes existing Story by userId, dateHappened and storyId`() {
+            // when
+            dynamoDbStoryRepository.deleteByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+
+            // then
+            assertThat(dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)).isNull()
+        }
+
+        @Test
+        fun `repository finds all the stories of the specified user but does not load stories of other users`() {
+            // when
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+
+            assertThat(storiesOfAUser.toSet()).isEqualTo(storiesOfBob.toSet())
+        }
+
+        @Test
+        fun `repository finds all the stories of the specified user and date`() {
+            // when
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
+
+            assertThat(storiesOfAUser.toSet()).isEqualTo(setOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay))
+        }
     }
 
-    @Test
-    fun `repository returns null when no Story found for a given id`() {
-        // when
-        val searchResult = dynamoDbStoryRepository.findById(greatStoryOfBob.id)
+    @Nested
+    inner class `given there is an invalid item in the DB` {
 
-        // then
-        assertThat(searchResult).isNull()
+        @ParameterizedTest
+        @ValueSource(strings = [idFieldName, locationFieldName, dateHappenedFieldName, timestampAddedFieldName, textFieldName])
+        fun `repository throws when a mandatory field is not present in a DB item`(missingFieldName: String) {
+            // given
+            val invalidDbItem = createAttributeMapFromStory(greatStoryOfBob).apply {
+                set(missingFieldName, null)
+            }
+            dynamoDb.putItem(storyTableName, invalidDbItem)
+
+            // expect
+            val thrown = assertThrows<InvalidDynamoDbItemException> {
+                dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+            }
+
+            assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: $missingFieldName")
+        }
     }
 
-    @Test
-    fun `repository returns null when no Story found for a given userId, dateHappened and storyId`() {
-        // when
-        val searchResult = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
-
-        // then
-        assertThat(searchResult).isNull()
-    }
-
-    @Test
-    fun `repository deletes existing Story`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
-
-        // when
-        dynamoDbStoryRepository.deleteById(greatStoryOfBob.id)
-
-        // then
-        assertThat(dynamoDbStoryRepository.findById(greatStoryOfBob.id)).isNull()
-    }
-
-    @Test
-    fun `repository deletes existing Story by userId, dateHappened and storyId`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
-
-        // when
-        dynamoDbStoryRepository.deleteByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
-
-        // then
-        assertThat(dynamoDbStoryRepository.findById(greatStoryOfBob.id)).isNull()
-    }
-
-    @Test
-    fun `repository does not throw when trying to delete a non-existing Story`() {
-        dynamoDbStoryRepository.deleteById(greatStoryOfBob.id)
-    }
-
-    @Test
-    fun `repository finds all the stories of the specified user but does not load stories of other users`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
-        dynamoDbStoryRepository.save(awesomeStoryOfBob)
-        dynamoDbStoryRepository.save(niceStoryOfBob)
-        dynamoDbStoryRepository.save(niceStoryOfAlice)
-
-        // when
-        val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
-
-        assertThat(storiesOfAUser.toSet()).isEqualTo(setOf(greatStoryOfBob, awesomeStoryOfBob, niceStoryOfBob))
-    }
-
-    @Test
-    fun `repository finds all the stories of the specified user and date`() {
-        // given
-        dynamoDbStoryRepository.save(greatStoryOfBob)
-        dynamoDbStoryRepository.save(greatStoryOfBobOnTheSameDay)
-        dynamoDbStoryRepository.save(awesomeStoryOfBob)
-        dynamoDbStoryRepository.save(niceStoryOfBob)
-        dynamoDbStoryRepository.save(niceStoryOfAlice)
-
-        // when
-        val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
-
-        assertThat(storiesOfAUser.toSet()).isEqualTo(setOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay))
-    }
-
-    @Test
-    fun `repository throws when userId is not present in a DynamoDb item`() {
-        // given
-        dynamoDb.putItem(storyTableName, mapOf(
-                idFieldName to AttributeValue(greatStoryOfBob.id),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndIdFieldName),
-                locationFieldName to AttributeValue(greatStoryOfBob.location),
-                dateHappenedFieldName to AttributeValue().withN("1234"),
+    private fun createAttributeMapFromStory(story: Story): MutableMap<String, AttributeValue?> {
+        return mutableMapOf(
+                idFieldName to AttributeValue(story.id),
+                userIdFieldName to AttributeValue(story.userId),
+                dateHappenedAndIdFieldName to AttributeValue(dynamoDbStoryRepository.createCompositeSortKey(story.dateHappened, story.id)),
+                locationFieldName to AttributeValue(story.location),
+                dateHappenedFieldName to AttributeValue().withN(story.dateHappened.toEpochDay().toString()),
                 timestampAddedFieldName to AttributeValue().withN("1234"),
-                textFieldName to AttributeValue(greatStoryOfBob.text)
-        ))
-
-        val thrown = assertThrows<InvalidDynamoDbItemException> {
-            dynamoDbStoryRepository.findById(greatStoryOfBob.id)
-        }
-
-        assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: userId")
-    }
-
-    @Test
-    fun `repository throws when location is not present in a DynamoDb item`() {
-        // given
-        dynamoDb.putItem(storyTableName, mapOf(
-                idFieldName to AttributeValue(greatStoryOfBob.id),
-                userIdFieldName to AttributeValue(greatStoryOfBob.userId),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndIdFieldName),
-                dateHappenedFieldName to AttributeValue().withN("1234"),
-                timestampAddedFieldName to AttributeValue().withN("1234"),
-                textFieldName to AttributeValue(greatStoryOfBob.text)
-        ))
-
-        val thrown = assertThrows<InvalidDynamoDbItemException> {
-            dynamoDbStoryRepository.findById(greatStoryOfBob.id)
-        }
-
-        assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: location")
-    }
-
-    @Test
-    fun `repository throws when dateHappened is not present in a DynamoDb item`() {
-        // given
-        dynamoDb.putItem(storyTableName, mapOf(
-                idFieldName to AttributeValue(greatStoryOfBob.id),
-                userIdFieldName to AttributeValue(greatStoryOfBob.userId),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndIdFieldName),
-                locationFieldName to AttributeValue(greatStoryOfBob.location),
-                timestampAddedFieldName to AttributeValue().withN("1234"),
-                textFieldName to AttributeValue(greatStoryOfBob.text)
-        ))
-
-        val thrown = assertThrows<InvalidDynamoDbItemException> {
-            dynamoDbStoryRepository.findById(greatStoryOfBob.id)
-        }
-
-        assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: dateHappened")
-    }
-
-    @Test
-    fun `repository throws when timestampAdded is not present in a DynamoDb item`() {
-        // given
-        dynamoDb.putItem(storyTableName, mapOf(
-                idFieldName to AttributeValue(greatStoryOfBob.id),
-                userIdFieldName to AttributeValue(greatStoryOfBob.userId),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndIdFieldName),
-                locationFieldName to AttributeValue(greatStoryOfBob.location),
-                dateHappenedFieldName to AttributeValue().withN("1234"),
-                textFieldName to AttributeValue(greatStoryOfBob.text)
-        ))
-
-        val thrown = assertThrows<InvalidDynamoDbItemException> {
-            dynamoDbStoryRepository.findById(greatStoryOfBob.id)
-        }
-
-        assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: timestampAdded")
-    }
-
-    @Test
-    fun `repository throws when text is not present in a DynamoDb item`() {
-        // given
-        dynamoDb.putItem(storyTableName, mapOf(
-                idFieldName to AttributeValue(greatStoryOfBob.id),
-                userIdFieldName to AttributeValue(greatStoryOfBob.userId),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndIdFieldName),
-                locationFieldName to AttributeValue(greatStoryOfBob.location),
-                dateHappenedFieldName to AttributeValue().withN("1234"),
-                timestampAddedFieldName to AttributeValue().withN("1234")
-        ))
-
-        val thrown = assertThrows<InvalidDynamoDbItemException> {
-            dynamoDbStoryRepository.findById(greatStoryOfBob.id)
-        }
-
-        assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: text")
+                textFieldName to AttributeValue(story.text)
+        )
     }
 }

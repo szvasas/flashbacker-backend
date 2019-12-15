@@ -55,11 +55,11 @@ internal class StoryControllerTest(
 
     @Nested
     @WithMockUser(USER_ID_OF_BOB)
-    inner class `With authenticated user` {
+    inner class `given there is an authenticated user` {
 
         @Nested
         @WithMockUser(USER_ID_OF_BOB)
-        inner class `GET request specification` {
+        inner class `given GET method` {
 
             @Test
             fun `given some stories exist in the DB stories endpoint without parameters returns all the stories for the logged in user with status code 200 and links`() {
@@ -227,7 +227,7 @@ internal class StoryControllerTest(
 
         @Nested
         @WithMockUser(USER_ID_OF_BOB)
-        inner class `POST method specification` {
+        inner class `given POST method` {
 
             @Test
             fun `given request body is valid stories endpoint saves the story and returns status code 201`() {
@@ -287,7 +287,7 @@ internal class StoryControllerTest(
 
         @Nested
         @WithMockUser(USER_ID_OF_BOB)
-        inner class `DELETE method specification` {
+        inner class `given DELETE method` {
 
             @Test
             fun `given valid parameters provided stories endpoint deletes the story and returns status code 204`() {
@@ -337,7 +337,7 @@ internal class StoryControllerTest(
     }
 
     @Nested
-    inner class `Without authenticated user` {
+    inner class `given there is no authenticated user` {
 
         @Test
         fun `GET to stories endpoint returns status code 401`() {

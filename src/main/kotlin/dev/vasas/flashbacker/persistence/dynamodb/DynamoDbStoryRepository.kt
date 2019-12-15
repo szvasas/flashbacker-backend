@@ -15,20 +15,12 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.save(story.toStoryEntity())
     }
 
-    override fun deleteById(id: String) {
-        storyDao.deleteById(id)
-    }
-
     override fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String) {
-        storyDao.deleteByUserIdAndDateHappenedAndId(userId, "${dateHappened}_$storyId")
-    }
-
-    override fun findById(id: String): Story? {
-        return storyDao.findById(id)?.toStory()
+        storyDao.deleteByUserIdAndDateHappenedAndId(userId, createCompositeSortKey(dateHappened, storyId))
     }
 
     override fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story? {
-        return storyDao.findByUserIdAndDateHappenedAndId(userId, "${dateHappened}_$storyId")?.toStory()
+        return storyDao.findByUserIdAndDateHappenedAndId(userId, createCompositeSortKey(dateHappened, storyId))?.toStory()
     }
 
     override fun findStoriesForUser(userId: String): List<Story> {
@@ -39,11 +31,15 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.findByUserIdAndDateHappened(userId, dateHappened).map { it.toStory() }
     }
 
+    internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): String {
+        return "${dateHappened}_${storyId}"
+    }
+
     private fun Story.toStoryEntity(): StoryEntity {
         return StoryEntity(
                 id = this.id,
                 userId = this.userId,
-                dateHappenedAndId = "${this.dateHappened}_${this.id}",
+                dateHappenedAndId = createCompositeSortKey(dateHappened, id),
                 location = this.location,
                 dateHappened = this.dateHappened.toEpochDay(),
                 timestampAdded = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli(),

@@ -7,8 +7,9 @@ import com.amazonaws.services.dynamodbv2.model.KeySchemaElement
 import com.amazonaws.services.dynamodbv2.model.KeyType
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedAndIdFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.context.annotation.Bean
@@ -44,9 +45,13 @@ internal class DynamoDbIntegrationTestExtension : BeforeAllCallback {
         private fun createTables() {
             val createTableRequest = CreateTableRequest()
                     .withTableName(storyTableName)
-                    .withKeySchema(KeySchemaElement(idFieldName, KeyType.HASH))
-                    .withAttributeDefinitions(AttributeDefinition(idFieldName, ScalarAttributeType.S))
-                    .withProvisionedThroughput(ProvisionedThroughput(1L, 1L))
+                    .withKeySchema(
+                            KeySchemaElement(userIdFieldName, KeyType.HASH),
+                            KeySchemaElement(dateHappenedAndIdFieldName, KeyType.RANGE)
+                    ).withAttributeDefinitions(
+                            AttributeDefinition(userIdFieldName, ScalarAttributeType.S),
+                            AttributeDefinition(dateHappenedAndIdFieldName, ScalarAttributeType.S)
+                    ).withProvisionedThroughput(ProvisionedThroughput(1L, 1L))
 
             dynamoDb.client.createTable(createTableRequest)
         }

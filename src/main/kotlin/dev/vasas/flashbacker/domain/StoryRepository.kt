@@ -6,11 +6,7 @@ interface StoryRepository {
 
     fun save(story: Story)
 
-    fun deleteById(id: String)
-
     fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String)
-
-    fun findById(id: String): Story?
 
     fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story?
 

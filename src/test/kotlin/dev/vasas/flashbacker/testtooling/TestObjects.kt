@@ -40,3 +40,15 @@ val niceStoryOfAlice = Story(
         dateHappened = LocalDate.of(2012, 5, 3),
         text = "Nice story of Alice"
 )
+
+val allStories = listOf(
+        greatStoryOfBob,
+        greatStoryOfBobOnTheSameDay,
+        awesomeStoryOfBob,
+        niceStoryOfBob,
+        niceStoryOfAlice
+)
+
+val storiesOfBob = allStories.filter {
+    it.userId == USER_ID_OF_BOB
+}
