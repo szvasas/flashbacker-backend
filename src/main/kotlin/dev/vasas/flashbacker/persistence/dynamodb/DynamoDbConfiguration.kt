@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 
 @Configuration
-@Profile("!dev")
+@Profile("prod")
 class DynamoDbConfiguration(
         @Value("\${flashbacker.dynamodb.endpoint}")
         private val endpoint: String,

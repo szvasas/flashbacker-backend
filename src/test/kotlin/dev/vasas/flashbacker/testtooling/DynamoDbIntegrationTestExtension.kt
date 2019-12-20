@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import org.testcontainers.dynamodb.DynaliteContainer
 
 /**
@@ -58,7 +57,6 @@ internal class DynamoDbIntegrationTestExtension : BeforeAllCallback {
     }
 
     @Configuration
-    @Profile("dev")
     internal class TestDynamoDbConfig {
         @Bean
         fun amazonDynamoDB(): AmazonDynamoDB {
