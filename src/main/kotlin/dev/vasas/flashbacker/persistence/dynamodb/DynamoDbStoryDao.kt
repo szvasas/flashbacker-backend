@@ -68,15 +68,19 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
     }
 
     private fun StoryEntity.toAttributeValueMap(): Map<String, AttributeValue> {
-        return mapOf(
+        val result = mutableMapOf(
                 idFieldName to AttributeValue(id),
                 userIdFieldName to AttributeValue(userId),
                 dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId),
-                locationFieldName to AttributeValue(location),
                 dateHappenedFieldName to AttributeValue().withN(dateHappened.toString()),
                 timestampAddedFieldName to AttributeValue().withN(timestampAdded.toString()),
                 textFieldName to AttributeValue(text)
         )
+        if (!location.isNullOrBlank()) {
+            result[locationFieldName] = AttributeValue(location)
+        }
+
+        return result
     }
 
     private fun Map<String, AttributeValue>.toStoryEntity(): StoryEntity {
@@ -84,7 +88,7 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
                 id = getStringOrThrow(idFieldName),
                 userId = getStringOrThrow(userIdFieldName),
                 dateHappenedAndId = getStringOrThrow(dateHappenedAndIdFieldName),
-                location = getStringOrThrow(locationFieldName),
+                location = this[locationFieldName]?.s,
                 dateHappened = getNumberOrThrow(dateHappenedFieldName),
                 timestampAdded = getNumberOrThrow(timestampAddedFieldName),
                 text = getStringOrThrow(textFieldName)

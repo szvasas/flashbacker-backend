@@ -15,6 +15,9 @@ import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
 import dev.vasas.flashbacker.testtooling.allStories
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
 import dev.vasas.flashbacker.testtooling.greatStoryOfBobOnTheSameDay
+import dev.vasas.flashbacker.testtooling.niceStoryOfAlice
+import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithBlankLocation
+import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithoutLocation
 import dev.vasas.flashbacker.testtooling.storiesOfBob
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
@@ -109,7 +112,7 @@ internal class DynamoDbStoryRepositoryTest(
     inner class `given there is an invalid item in the DB` {
 
         @ParameterizedTest
-        @ValueSource(strings = [idFieldName, locationFieldName, dateHappenedFieldName, timestampAddedFieldName, textFieldName])
+        @ValueSource(strings = [idFieldName, dateHappenedFieldName, timestampAddedFieldName, textFieldName])
         fun `repository throws when a mandatory field is not present in a DB item`(missingFieldName: String) {
             // given
             val invalidDbItem = createAttributeMapFromStory(greatStoryOfBob).apply {
@@ -126,15 +129,54 @@ internal class DynamoDbStoryRepositoryTest(
         }
     }
 
+    @Test
+    fun `save method saves Story with location properly`() {
+        dynamoDbStoryRepository.save(niceStoryOfAlice)
+
+        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
+                niceStoryOfAlice.userId,
+                niceStoryOfAlice.dateHappened,
+                niceStoryOfAlice.id
+        )
+        assertThat(savedStory).isEqualTo(niceStoryOfAlice)
+    }
+
+    @Test
+    fun `save method saves Story without location properly`() {
+        dynamoDbStoryRepository.save(niceStoryOfAliceWithoutLocation)
+
+        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
+                niceStoryOfAliceWithoutLocation.userId,
+                niceStoryOfAliceWithoutLocation.dateHappened,
+                niceStoryOfAliceWithoutLocation.id
+        )
+        assertThat(savedStory).isEqualTo(niceStoryOfAliceWithoutLocation)
+    }
+
+    @Test
+    fun `save method saves Story with blank location properly`() {
+        dynamoDbStoryRepository.save(niceStoryOfAliceWithBlankLocation)
+
+        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
+                niceStoryOfAliceWithBlankLocation.userId,
+                niceStoryOfAliceWithBlankLocation.dateHappened,
+                niceStoryOfAliceWithBlankLocation.id
+        )
+        assertThat(savedStory).isEqualTo(niceStoryOfAliceWithBlankLocation.copy(location = null))
+    }
+
     private fun createAttributeMapFromStory(story: Story): MutableMap<String, AttributeValue?> {
-        return mutableMapOf(
+        val result = mutableMapOf(
                 idFieldName to AttributeValue(story.id),
                 userIdFieldName to AttributeValue(story.userId),
                 dateHappenedAndIdFieldName to AttributeValue(dynamoDbStoryRepository.createCompositeSortKey(story.dateHappened, story.id)),
-                locationFieldName to AttributeValue(story.location),
                 dateHappenedFieldName to AttributeValue().withN(story.dateHappened.toEpochDay().toString()),
                 timestampAddedFieldName to AttributeValue().withN("1234"),
                 textFieldName to AttributeValue(story.text)
         )
+        if (!story.location.isNullOrBlank()) {
+            result[locationFieldName] = AttributeValue(story.location)
+        }
+        return result
     }
 }

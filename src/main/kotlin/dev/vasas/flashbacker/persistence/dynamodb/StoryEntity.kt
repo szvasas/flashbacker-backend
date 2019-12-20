@@ -4,7 +4,7 @@ data class StoryEntity(
         val id: String,
         val userId: String,
         val dateHappenedAndId: String,
-        val location: String,
+        val location: String? = null,
         val dateHappened: Long,
         val timestampAdded: Long,
         val text: String

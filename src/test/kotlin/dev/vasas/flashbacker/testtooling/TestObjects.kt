@@ -41,12 +41,22 @@ val niceStoryOfAlice = Story(
         text = "Nice story of Alice"
 )
 
+val niceStoryOfAliceWithoutLocation = niceStoryOfAlice.copy(
+        location = null
+)
+
+val niceStoryOfAliceWithBlankLocation = niceStoryOfAlice.copy(
+        location = "  "
+)
+
 val allStories = listOf(
         greatStoryOfBob,
         greatStoryOfBobOnTheSameDay,
         awesomeStoryOfBob,
         niceStoryOfBob,
-        niceStoryOfAlice
+        niceStoryOfAlice,
+        niceStoryOfAliceWithoutLocation,
+        niceStoryOfAliceWithBlankLocation
 )
 
 val storiesOfBob = allStories.filter {

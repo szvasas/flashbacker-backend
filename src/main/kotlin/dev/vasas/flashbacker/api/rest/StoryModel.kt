@@ -7,7 +7,7 @@ import java.time.LocalDate
 @Relation(itemRelation = StoryModel.itemRelationName, collectionRelation = StoryModel.collectionRelationName)
 data class StoryModel(
         val id: String? = null,
-        val location: String,
+        val location: String? = null,
         val dateHappened: LocalDate,
         val text: String
 ) : RepresentationModel<StoryModel>() {
