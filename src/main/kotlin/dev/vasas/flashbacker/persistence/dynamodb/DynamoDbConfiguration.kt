@@ -19,10 +19,10 @@ class DynamoDbConfiguration(
         @Value("\${flashbacker.dynamodb.endpoint}")
         private val endpoint: String,
 
-        @Value("\${flashbacker.dynamodb.accesskey}")
+        @Value("\${flashbacker.dynamodb.accessKey}")
         private val accessKey: String,
 
-        @Value("\${flashbacker.dynamodb.secretkey}")
+        @Value("\${flashbacker.dynamodb.secretKey}")
         private val secretKey: String,
 
         @Value("\${flashbacker.dynamodb.region}")
