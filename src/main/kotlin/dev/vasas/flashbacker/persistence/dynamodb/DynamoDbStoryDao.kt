@@ -67,39 +67,40 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
                 .map { it.toStoryEntity() }
     }
 
-    private fun StoryEntity.toAttributeValueMap(): Map<String, AttributeValue> {
-        val result = mutableMapOf(
-                idFieldName to AttributeValue(id),
-                userIdFieldName to AttributeValue(userId),
-                dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId),
-                dateHappenedFieldName to AttributeValue().withN(dateHappened.toString()),
-                timestampAddedFieldName to AttributeValue().withN(timestampAdded.toString()),
-                textFieldName to AttributeValue(text)
-        )
-        if (!location.isNullOrBlank()) {
-            result[locationFieldName] = AttributeValue(location)
-        }
+}
 
-        return result
+private fun StoryEntity.toAttributeValueMap(): Map<String, AttributeValue> {
+    val result = mutableMapOf(
+            idFieldName to AttributeValue(id),
+            userIdFieldName to AttributeValue(userId),
+            dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId),
+            dateHappenedFieldName to AttributeValue().withN(dateHappened.toString()),
+            timestampAddedFieldName to AttributeValue().withN(timestampAdded.toString()),
+            textFieldName to AttributeValue(text)
+    )
+    if (!location.isNullOrBlank()) {
+        result[locationFieldName] = AttributeValue(location)
     }
 
-    private fun Map<String, AttributeValue>.toStoryEntity(): StoryEntity {
-        return StoryEntity(
-                id = getStringOrThrow(idFieldName),
-                userId = getStringOrThrow(userIdFieldName),
-                dateHappenedAndId = getStringOrThrow(dateHappenedAndIdFieldName),
-                location = this[locationFieldName]?.s,
-                dateHappened = getNumberOrThrow(dateHappenedFieldName),
-                timestampAdded = getNumberOrThrow(timestampAddedFieldName),
-                text = getStringOrThrow(textFieldName)
-        )
-    }
+    return result
+}
 
-    private fun Map<String, AttributeValue>.getStringOrThrow(fieldName: String): String {
-        return this[fieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
-    }
+private fun Map<String, AttributeValue>.toStoryEntity(): StoryEntity {
+    return StoryEntity(
+            id = getStringOrThrow(idFieldName),
+            userId = getStringOrThrow(userIdFieldName),
+            dateHappenedAndId = getStringOrThrow(dateHappenedAndIdFieldName),
+            location = this[locationFieldName]?.s,
+            dateHappened = getNumberOrThrow(dateHappenedFieldName),
+            timestampAdded = getNumberOrThrow(timestampAddedFieldName),
+            text = getStringOrThrow(textFieldName)
+    )
+}
 
-    private fun Map<String, AttributeValue>.getNumberOrThrow(fieldName: String): Long {
-        return this[fieldName]?.n?.toLong() ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
-    }
+private fun Map<String, AttributeValue>.getStringOrThrow(fieldName: String): String {
+    return this[fieldName]?.s ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
+}
+
+private fun Map<String, AttributeValue>.getNumberOrThrow(fieldName: String): Long {
+    return this[fieldName]?.n?.toLong() ?: throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
 }

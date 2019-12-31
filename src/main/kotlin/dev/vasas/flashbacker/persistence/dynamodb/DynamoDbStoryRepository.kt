@@ -31,29 +31,30 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.findByUserIdAndDateHappened(userId, dateHappened).map { it.toStory() }
     }
 
-    internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): String {
-        return "${dateHappened}_${storyId}"
-    }
+}
 
-    private fun Story.toStoryEntity(): StoryEntity {
-        return StoryEntity(
-                id = this.id,
-                userId = this.userId,
-                dateHappenedAndId = createCompositeSortKey(dateHappened, id),
-                location = this.location,
-                dateHappened = this.dateHappened.toEpochDay(),
-                timestampAdded = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli(),
-                text = this.text
-        )
-    }
+internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): String {
+    return "${dateHappened}_${storyId}"
+}
 
-    private fun StoryEntity.toStory(): Story {
-        return Story(
-                id = this.id,
-                userId = this.userId,
-                location = this.location,
-                dateHappened = LocalDate.ofEpochDay(this.dateHappened),
-                text = this.text
-        )
-    }
+private fun Story.toStoryEntity(): StoryEntity {
+    return StoryEntity(
+            id = this.id,
+            userId = this.userId,
+            dateHappenedAndId = createCompositeSortKey(dateHappened, id),
+            location = this.location,
+            dateHappened = this.dateHappened.toEpochDay(),
+            timestampAdded = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli(),
+            text = this.text
+    )
+}
+
+private fun StoryEntity.toStory(): Story {
+    return Story(
+            id = this.id,
+            userId = this.userId,
+            location = this.location,
+            dateHappened = LocalDate.ofEpochDay(this.dateHappened),
+            text = this.text
+    )
 }

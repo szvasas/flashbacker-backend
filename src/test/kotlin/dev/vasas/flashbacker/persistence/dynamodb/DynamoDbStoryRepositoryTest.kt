@@ -40,7 +40,7 @@ internal class DynamoDbStoryRepositoryTest(
         allStories.forEach {
             dynamoDb.deleteItem(storyTableName, mapOf(
                     userIdFieldName to AttributeValue(it.userId),
-                    dateHappenedAndIdFieldName to AttributeValue(dynamoDbStoryRepository.createCompositeSortKey(it.dateHappened, it.id))
+                    dateHappenedAndIdFieldName to AttributeValue(createCompositeSortKey(it.dateHappened, it.id))
             ))
         }
     }
@@ -169,7 +169,7 @@ internal class DynamoDbStoryRepositoryTest(
         val result = mutableMapOf(
                 idFieldName to AttributeValue(story.id),
                 userIdFieldName to AttributeValue(story.userId),
-                dateHappenedAndIdFieldName to AttributeValue(dynamoDbStoryRepository.createCompositeSortKey(story.dateHappened, story.id)),
+                dateHappenedAndIdFieldName to AttributeValue(createCompositeSortKey(story.dateHappened, story.id)),
                 dateHappenedFieldName to AttributeValue().withN(story.dateHappened.toEpochDay().toString()),
                 timestampAddedFieldName to AttributeValue().withN("1234"),
                 textFieldName to AttributeValue(story.text)
