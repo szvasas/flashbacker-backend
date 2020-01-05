@@ -29,7 +29,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping(path = ["/$collectionRelationName"], produces = [MediaTypes.HAL_JSON_VALUE])
-@CrossOrigin(origins = ["http://localhost:8080"])
+@CrossOrigin(origins = ["http://localhost:8080", "https://flashbacker-qa.vasas.dev", "https://flashbacker.vasas.dev"])
 class StoryController(
         private val idGenerator: () -> String = { UUID.randomUUID().toString() },
         private val storyRepo: StoryRepository

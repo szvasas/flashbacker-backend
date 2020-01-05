@@ -13,7 +13,7 @@ import java.security.Principal
 
 @RestController
 @RequestMapping(path = ["/"], produces = [MediaTypes.HAL_JSON_VALUE])
-@CrossOrigin(origins = ["http://localhost:8080"])
+@CrossOrigin(origins = ["http://localhost:8080", "https://flashbacker-qa.vasas.dev", "https://flashbacker.vasas.dev"])
 class ApiController {
 
     class ApiModel : RepresentationModel<ApiModel>()
