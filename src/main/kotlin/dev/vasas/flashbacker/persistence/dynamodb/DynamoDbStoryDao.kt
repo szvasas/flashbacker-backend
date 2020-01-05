@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator
 import com.amazonaws.services.dynamodbv2.model.Condition
+import com.amazonaws.services.dynamodbv2.model.QueryRequest
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedAndIdFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
@@ -30,12 +31,15 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
     }
 
     fun findByUserId(userId: String): List<StoryEntity> {
-        val equalToInputCondition = Condition()
+        val userEqualToInputCondition = Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(AttributeValue(userId))
 
+        val queryRequest = QueryRequest(storyTableName)
+                .withKeyConditions(mapOf(userIdFieldName to userEqualToInputCondition))
+
         return dynamoDb
-                .scan(storyTableName, mapOf(userIdFieldName to equalToInputCondition))
+                .query(queryRequest)
                 .items
                 .map { it.toStoryEntity() }
     }
@@ -58,11 +62,14 @@ class DynamoDbStoryDao(private val dynamoDb: AmazonDynamoDB) {
                 .withComparisonOperator(ComparisonOperator.BEGINS_WITH)
                 .withAttributeValueList(AttributeValue(dateHappened.toString()))
 
-        return dynamoDb
-                .scan(storyTableName, mapOf(
+        val queryRequest = QueryRequest(storyTableName)
+                .withKeyConditions(mapOf(
                         userIdFieldName to userEqualToInputCondition,
                         dateHappenedAndIdFieldName to dateHappenedEqualToInputCondition
                 ))
+
+        return dynamoDb
+                .query(queryRequest)
                 .items
                 .map { it.toStoryEntity() }
     }
