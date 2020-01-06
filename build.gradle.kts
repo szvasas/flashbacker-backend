@@ -75,7 +75,7 @@ tasks.wrapper {
 
 jib {
     container {
-        ports = listOf("8080")
+        user = "1000"
     }
 }
 
