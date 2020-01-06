@@ -1,5 +1,6 @@
 package dev.vasas.flashbacker.api.rest
 
+import org.slf4j.LoggerFactory
 import org.springframework.hateoas.MediaTypes
 import org.springframework.hateoas.RepresentationModel
 import org.springframework.hateoas.server.mvc.linkTo
@@ -16,10 +17,13 @@ import java.security.Principal
 @CrossOrigin(origins = ["http://localhost:8080", "https://flashbacker-qa.vasas.dev", "https://flashbacker.vasas.dev"])
 class ApiController {
 
+    private val logger = LoggerFactory.getLogger(ApiController::class.java)
+
     class ApiModel : RepresentationModel<ApiModel>()
 
     @GetMapping
     fun availableEndpoints(): ResponseEntity<ApiModel> {
+        logger.debug("Sending available endpoints.")
         val result = ApiModel()
         result.add(linkTo<ApiController> { availableEndpoints() }.withSelfRel())
         result.add(linkTo<StoryController> { listStories(AnyPrincipal()) }.withRel(StoryModel.collectionRelationName))

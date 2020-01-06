@@ -5,6 +5,7 @@ import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toModel
 import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryRepository
+import org.slf4j.LoggerFactory
 import org.springframework.hateoas.CollectionModel
 import org.springframework.hateoas.IanaLinkRelations
 import org.springframework.hateoas.MediaTypes
@@ -35,12 +36,16 @@ class StoryController(
         private val storyRepo: StoryRepository
 ) {
 
+    private val logger = LoggerFactory.getLogger(StoryController::class.java)
+
     @GetMapping
     fun listStories(principal: Principal): CollectionModel<StoryModel> {
+        logger.info("Listing stories for user: ${principal.name}.")
         val foundStories = storyRepo.findStoriesForUser(principal.name)
         val result = toCollectionModel(foundStories)
         val selfRel = linkTo<StoryController> { listStories(principal) }.withRel(IanaLinkRelations.SELF)
         result.add(selfRel)
+        logger.info("Returning result of size: ${result.content.size}.")
         return result
     }
 
@@ -52,12 +57,15 @@ class StoryController(
             @PathVariable dayOfMonth: Int,
             @PathVariable id: String
     ): ResponseEntity<StoryModel?> {
+        logger.info("Retrieving story for user: ${principal.name}, date: $year-$month-$dayOfMonth and id: $id.")
         val dateHappened = parseDateHappened(year, month, dayOfMonth)
 
         val foundStory = storyRepo.findByUserDateHappenedStoryId(principal.name, dateHappened, id)
         return if (foundStory != null) {
+            logger.info("Story is found.")
             ResponseEntity(toModel(foundStory), HttpStatus.OK)
         } else {
+            logger.info("Story is not found.")
             ResponseEntity<StoryModel?>(null, HttpStatus.NOT_FOUND)
         }
     }
@@ -72,6 +80,7 @@ class StoryController(
                 dateHappened = newStoryModel.dateHappened,
                 text = newStoryModel.text
         )
+        logger.info("Creating a new story for user: ${principal.name} with id: ${newStory.id}.")
 
         storyRepo.save(newStory)
     }
@@ -85,6 +94,8 @@ class StoryController(
             @PathVariable dayOfMonth: Int,
             @PathVariable id: String
     ) {
+        logger.info("Deleting story for user: ${principal.name}, date: $year-$month-$dayOfMonth and id: $id.")
+
         val dateHappened = parseDateHappened(year, month, dayOfMonth)
         storyRepo.deleteByUserDateHappenedStoryId(principal.name, dateHappened, id)
     }
@@ -93,6 +104,7 @@ class StoryController(
         return try {
             return LocalDate.of(year, month, dayOfMonth)
         } catch (e: DateTimeException) {
+            logger.warn("Date parsing has failed: ", e)
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message, e)
         }
     }
