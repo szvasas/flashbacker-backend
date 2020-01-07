@@ -4,6 +4,7 @@ import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -44,7 +45,7 @@ private fun Story.toStoryEntity(): StoryEntity {
             dateHappenedAndId = createCompositeSortKey(dateHappened, id),
             location = this.location,
             dateHappened = this.dateHappened.toEpochDay(),
-            timestampAdded = ZonedDateTime.now(ZoneId.of("UTC")).toInstant().toEpochMilli(),
+            timestampCreated = this.timestampCreated.toInstant().toEpochMilli(),
             text = this.text
     )
 }
@@ -55,6 +56,7 @@ private fun StoryEntity.toStory(): Story {
             userId = this.userId,
             location = this.location,
             dateHappened = LocalDate.ofEpochDay(this.dateHappened),
+            timestampCreated = ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.timestampCreated), ZoneId.of("UTC")),
             text = this.text
     )
 }

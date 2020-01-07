@@ -9,7 +9,7 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldN
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.locationFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampAddedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampCreatedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
 import dev.vasas.flashbacker.testtooling.allStories
@@ -112,7 +112,7 @@ internal class DynamoDbStoryRepositoryTest(
     inner class `given there is an invalid item in the DB` {
 
         @ParameterizedTest
-        @ValueSource(strings = [idFieldName, dateHappenedFieldName, timestampAddedFieldName, textFieldName])
+        @ValueSource(strings = [idFieldName, dateHappenedFieldName, timestampCreatedFieldName, textFieldName])
         fun `repository throws when a mandatory field is not present in a DB item`(missingFieldName: String) {
             // given
             val invalidDbItem = createAttributeMapFromStory(greatStoryOfBob).apply {
@@ -171,7 +171,7 @@ internal class DynamoDbStoryRepositoryTest(
                 userIdFieldName to AttributeValue(story.userId),
                 dateHappenedAndIdFieldName to AttributeValue(createCompositeSortKey(story.dateHappened, story.id)),
                 dateHappenedFieldName to AttributeValue().withN(story.dateHappened.toEpochDay().toString()),
-                timestampAddedFieldName to AttributeValue().withN("1234"),
+                timestampCreatedFieldName to AttributeValue().withN(story.timestampCreated.toInstant().toEpochMilli().toString()),
                 textFieldName to AttributeValue(story.text)
         )
         if (!story.location.isNullOrBlank()) {

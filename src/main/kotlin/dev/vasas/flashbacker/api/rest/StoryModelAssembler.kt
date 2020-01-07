@@ -13,6 +13,7 @@ object StoryModelAssembler : RepresentationModelAssemblerSupport<Story, StoryMod
                 id = entity.id,
                 location = entity.location,
                 dateHappened = entity.dateHappened,
+                timestampCreated = entity.timestampCreated,
                 text = entity.text
         )
     }

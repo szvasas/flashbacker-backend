@@ -6,7 +6,7 @@ data class StoryEntity(
         val dateHappenedAndId: String,
         val location: String? = null,
         val dateHappened: Long,
-        val timestampAdded: Long,
+        val timestampCreated: Long,
         val text: String
 ) {
 
@@ -18,7 +18,7 @@ data class StoryEntity(
         const val dateHappenedAndIdFieldName = "dateHappenedAndId"
         const val locationFieldName = "location"
         const val dateHappenedFieldName = "dateHappened"
-        const val timestampAddedFieldName = "timestampAdded"
+        const val timestampCreatedFieldName = "timestampCreated"
         const val textFieldName = "text"
     }
 }

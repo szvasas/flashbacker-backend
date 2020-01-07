@@ -28,11 +28,15 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @WebMvcTest(controllers = [StoryController::class])
 internal class StoryControllerTest(
         @Autowired private val mockMvc: MockMvc,
-        @Autowired private val storyIdGenerator: () -> String
+        @Autowired private val storyIdGenerator: () -> String,
+        @Autowired private val timestampCreatedGenerator: () -> ZonedDateTime
 ) {
 
     companion object {
@@ -46,6 +50,9 @@ internal class StoryControllerTest(
 
         @Bean
         fun idGenerator(): () -> String = { "42" }
+
+        @Bean
+        fun timestampCreatedGenerator(): () -> ZonedDateTime = { ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")) }
     }
 
     @BeforeEach
@@ -80,6 +87,7 @@ internal class StoryControllerTest(
                             "id":"test-id-2",
                             "location":"Home",
                             "dateHappened":"2017-11-23",
+                            "timestampCreated":"2017-12-03T15:43:15Z",
                             "text":"Awesome stuff",
                             "_links":{"self":{"href":"http://localhost/stories/2017/11/23/test-id-2"}
                             }
@@ -88,6 +96,7 @@ internal class StoryControllerTest(
                             "id":"test-id-1",
                             "location":"The Beach",
                             "dateHappened":"2017-12-03",
+                            "timestampCreated":"2017-12-03T15:43:15Z",
                             "text":"Great things",
                             "_links":{"self":{"href":"http://localhost/stories/2017/12/3/test-id-1"}
                             }
@@ -184,6 +193,7 @@ internal class StoryControllerTest(
                       "id":"test-id-2",
                       "location":"Home",
                       "dateHappened":"2017-11-23",
+                      "timestampCreated":"2017-12-03T15:43:15Z",
                       "text":"Awesome stuff",
                       "_links":{
                         "self":{
@@ -255,6 +265,7 @@ internal class StoryControllerTest(
                         userId = USER_ID_OF_BOB,
                         location = "Home",
                         dateHappened = LocalDate.of(2017, 11, 23),
+                        timestampCreated = timestampCreatedGenerator(),
                         text = "Awesome stuff"
                 ))
             }

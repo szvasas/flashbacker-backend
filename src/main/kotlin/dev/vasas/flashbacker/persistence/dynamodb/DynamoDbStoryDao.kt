@@ -11,7 +11,7 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldN
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.locationFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampAddedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampCreatedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -82,7 +82,7 @@ private fun StoryEntity.toAttributeValueMap(): Map<String, AttributeValue> {
             userIdFieldName to AttributeValue(userId),
             dateHappenedAndIdFieldName to AttributeValue(dateHappenedAndId),
             dateHappenedFieldName to AttributeValue().withN(dateHappened.toString()),
-            timestampAddedFieldName to AttributeValue().withN(timestampAdded.toString()),
+            timestampCreatedFieldName to AttributeValue().withN(timestampCreated.toString()),
             textFieldName to AttributeValue(text)
     )
     if (!location.isNullOrBlank()) {
@@ -99,7 +99,7 @@ private fun Map<String, AttributeValue>.toStoryEntity(): StoryEntity {
             dateHappenedAndId = getStringOrThrow(dateHappenedAndIdFieldName),
             location = this[locationFieldName]?.s,
             dateHappened = getNumberOrThrow(dateHappenedFieldName),
-            timestampAdded = getNumberOrThrow(timestampAddedFieldName),
+            timestampCreated = getNumberOrThrow(timestampCreatedFieldName),
             text = getStringOrThrow(textFieldName)
     )
 }
