@@ -53,10 +53,12 @@ val niceStoryOfAlice = Story(
 )
 
 val niceStoryOfAliceWithoutLocation = niceStoryOfAlice.copy(
+        id = "test-id-6",
         location = null
 )
 
 val niceStoryOfAliceWithBlankLocation = niceStoryOfAlice.copy(
+        id = "test-id-7",
         location = "  "
 )
 

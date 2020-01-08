@@ -1,16 +1,10 @@
 package dev.vasas.flashbacker.persistence.dynamodb
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import dev.vasas.flashbacker.domain.Story
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedAndIdFieldName
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.locationFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampCreatedFieldName
-import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
 import dev.vasas.flashbacker.testtooling.allStories
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
@@ -28,21 +22,19 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.full.memberProperties
 
 @DynamoDbIntegrationTest
 internal class DynamoDbStoryRepositoryTest(
-        @Autowired private val dynamoDb: AmazonDynamoDB,
+        @Autowired private val dynamoDbMapper: DynamoDBMapper,
         @Autowired private val dynamoDbStoryRepository: DynamoDbStoryRepository
 ) {
 
     @AfterEach
     fun clearTestData() {
-        allStories.forEach {
-            dynamoDb.deleteItem(storyTableName, mapOf(
-                    userIdFieldName to AttributeValue(it.userId),
-                    dateHappenedAndIdFieldName to AttributeValue(createCompositeSortKey(it.dateHappened, it.id))
-            ))
-        }
+        val failedBatches = dynamoDbMapper.batchDelete(allStories.map { it.toStoryEntity() })
+        failedBatches.firstOrNull()?.let { throw it.exception }
     }
 
     @Nested
@@ -68,9 +60,8 @@ internal class DynamoDbStoryRepositoryTest(
 
         @BeforeEach
         fun loadTestData() {
-            allStories.forEach {
-                dynamoDb.putItem(storyTableName, createAttributeMapFromStory(it))
-            }
+            val failedBatches = dynamoDbMapper.batchSave(allStories.map { it.toStoryEntity() })
+            failedBatches.firstOrNull()?.let { throw it.exception }
         }
 
         @Test
@@ -115,10 +106,8 @@ internal class DynamoDbStoryRepositoryTest(
         @ValueSource(strings = [idFieldName, dateHappenedFieldName, timestampCreatedFieldName, textFieldName])
         fun `repository throws when a mandatory field is not present in a DB item`(missingFieldName: String) {
             // given
-            val invalidDbItem = createAttributeMapFromStory(greatStoryOfBob).apply {
-                set(missingFieldName, null)
-            }
-            dynamoDb.putItem(storyTableName, invalidDbItem)
+            val invalidStoryEntity = clearFieldValue(greatStoryOfBob.toStoryEntity(), missingFieldName)
+            dynamoDbMapper.save(invalidStoryEntity)
 
             // expect
             val thrown = assertThrows<InvalidDynamoDbItemException> {
@@ -165,18 +154,14 @@ internal class DynamoDbStoryRepositoryTest(
         assertThat(savedStory).isEqualTo(niceStoryOfAliceWithBlankLocation.copy(location = null))
     }
 
-    private fun createAttributeMapFromStory(story: Story): MutableMap<String, AttributeValue?> {
-        val result = mutableMapOf(
-                idFieldName to AttributeValue(story.id),
-                userIdFieldName to AttributeValue(story.userId),
-                dateHappenedAndIdFieldName to AttributeValue(createCompositeSortKey(story.dateHappened, story.id)),
-                dateHappenedFieldName to AttributeValue().withN(story.dateHappened.toEpochDay().toString()),
-                timestampCreatedFieldName to AttributeValue().withN(story.timestampCreated.toInstant().toEpochMilli().toString()),
-                textFieldName to AttributeValue(story.text)
-        )
-        if (!story.location.isNullOrBlank()) {
-            result[locationFieldName] = AttributeValue(story.location)
-        }
+    private fun clearFieldValue(storyEntity: StoryEntity, fieldName: String): StoryEntity {
+        val result = storyEntity.copy()
+        StoryEntity::class
+                .memberProperties
+                .filterIsInstance<KMutableProperty<*>>()
+                .find { it.name == fieldName }!!
+                .setter
+                .call(result, null)
         return result
     }
 }

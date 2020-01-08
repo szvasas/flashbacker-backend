@@ -2,6 +2,11 @@ package dev.vasas.flashbacker.persistence.dynamodb
 
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryRepository
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampCreatedFieldName
+import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.Instant
@@ -38,25 +43,31 @@ internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): S
     return "${dateHappened}_${storyId}"
 }
 
-private fun Story.toStoryEntity(): StoryEntity {
+internal fun Story.toStoryEntity(): StoryEntity {
     return StoryEntity(
             id = this.id,
             userId = this.userId,
             dateHappenedAndId = createCompositeSortKey(dateHappened, id),
-            location = this.location,
+            location = this.location.takeUnless { it.isNullOrBlank() },
             dateHappened = this.dateHappened.toEpochDay(),
             timestampCreated = this.timestampCreated.toInstant().toEpochMilli(),
             text = this.text
     )
 }
 
-private fun StoryEntity.toStory(): Story {
+internal fun StoryEntity.toStory(): Story {
     return Story(
-            id = this.id,
-            userId = this.userId,
+            id = this.id ?: throwInvalidDynamoDbItemException(idFieldName),
+            userId = this.userId ?: throwInvalidDynamoDbItemException(userIdFieldName),
             location = this.location,
-            dateHappened = LocalDate.ofEpochDay(this.dateHappened),
-            timestampCreated = ZonedDateTime.ofInstant(Instant.ofEpochMilli(this.timestampCreated), ZoneId.of("UTC")),
-            text = this.text
+            dateHappened = this.dateHappened?.let { LocalDate.ofEpochDay(it) }
+                    ?: throwInvalidDynamoDbItemException(dateHappenedFieldName),
+            timestampCreated = this.timestampCreated?.let { ZonedDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.of("UTC")) }
+                    ?: throwInvalidDynamoDbItemException(timestampCreatedFieldName),
+            text = this.text ?: throwInvalidDynamoDbItemException(textFieldName)
     )
+}
+
+private fun throwInvalidDynamoDbItemException(fieldName: String): Nothing {
+    throw InvalidDynamoDbItemException.missingMandatoryField(fieldName)
 }
