@@ -1,6 +1,5 @@
 package dev.vasas.flashbacker.api.rest
 
-import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Page
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryRepository
@@ -31,7 +30,7 @@ import org.springframework.test.web.servlet.post
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 
 @WebMvcTest(controllers = [StoryController::class])
@@ -60,7 +59,7 @@ internal class StoryControllerTest(
                             LocalDate.of(1970, 1, 1),
                             LocalTime.MIDNIGHT
                     ),
-                    ZoneId.of("UTC")
+                    UTC
             )
         }
     }
@@ -85,7 +84,7 @@ internal class StoryControllerTest(
                     mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
                 } returns Page(listOf(awesomeStoryOfBob, greatStoryOfBob))
 
-                mockMvc.get("/$collectionRelationName") {
+                mockMvc.get("/stories") {
                 }.andExpect {
                     status { isOk }
                     content {
@@ -140,7 +139,7 @@ internal class StoryControllerTest(
                     mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
                 } returns Page(listOf(awesomeStoryOfBob, greatStoryOfBob), true)
 
-                mockMvc.get("/$collectionRelationName") {
+                mockMvc.get("/stories") {
                 }.andExpect {
                     status { isOk }
                     jsonPath("$._links.next.href") {
@@ -158,7 +157,7 @@ internal class StoryControllerTest(
                     mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
                 } returns Page(emptyList())
 
-                mockMvc.get("/$collectionRelationName") {
+                mockMvc.get("/stories") {
                 }.andExpect {
                     status { isOk }
                     content {
@@ -189,8 +188,7 @@ internal class StoryControllerTest(
                     mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 } returns null
 
-                mockMvc.get("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
-                        "/${awesomeStoryOfBob.dateHappened.monthValue}/${awesomeStoryOfBob.dateHappened.dayOfMonth}/${awesomeStoryOfBob.id}") {
+                mockMvc.get("/stories/2017/11/23/test-id-2") {
                 }.andExpect {
                     status { isNotFound }
                     content { string("") }
@@ -210,8 +208,7 @@ internal class StoryControllerTest(
                     mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 } returns awesomeStoryOfBob
 
-                mockMvc.get("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
-                        "/${awesomeStoryOfBob.dateHappened.monthValue}/${awesomeStoryOfBob.dateHappened.dayOfMonth}/${awesomeStoryOfBob.id}") {
+                mockMvc.get("/stories/2017/11/23/test-id-2") {
                 }.andExpect {
                     status { isOk }
                     content {
@@ -246,10 +243,8 @@ internal class StoryControllerTest(
                 every {
                     mockStoryRepository.findByKey(any())
                 } returns awesomeStoryOfBob
-                val invalidMonth = 15
 
-                mockMvc.get("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
-                        "/${invalidMonth}/${awesomeStoryOfBob.dateHappened.dayOfMonth}/${awesomeStoryOfBob.id}") {
+                mockMvc.get("/stories/2017/15/23/test-id-2") {
                 }.andExpect {
                     status { isBadRequest }
                 }.andDo {
@@ -278,7 +273,7 @@ internal class StoryControllerTest(
                 }
                 val validContent = """{"location":"Home","dateHappened":"2017-11-23","text":"Awesome stuff"}"""
 
-                mockMvc.post("/$collectionRelationName") {
+                mockMvc.post("/stories") {
                     with(csrf())
                     contentType = MediaType.APPLICATION_JSON
                     content = validContent
@@ -308,7 +303,7 @@ internal class StoryControllerTest(
                 }
                 val invalidContent = """{"l":"Home","d":"2017-11-23","t":"Awesome stuff"}"""
 
-                mockMvc.post("/$collectionRelationName") {
+                mockMvc.post("/stories") {
                     with(csrf())
                     contentType = MediaType.APPLICATION_JSON
                     content = invalidContent
@@ -336,8 +331,7 @@ internal class StoryControllerTest(
                     nothing
                 }
 
-                mockMvc.delete("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
-                        "/${awesomeStoryOfBob.dateHappened.monthValue}/${awesomeStoryOfBob.dateHappened.dayOfMonth}/${awesomeStoryOfBob.id}") {
+                mockMvc.delete("/stories/2017/11/23/test-id-2") {
                     with(csrf())
                 }.andExpect {
                     status { isNoContent }
@@ -357,10 +351,8 @@ internal class StoryControllerTest(
                 } answers {
                     nothing
                 }
-                val invalidMonth = 20
 
-                mockMvc.delete("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
-                        "/${invalidMonth}/${awesomeStoryOfBob.dateHappened.dayOfMonth}/${awesomeStoryOfBob.id}") {
+                mockMvc.delete("/stories/2017/20/23/test-id-2") {
                     with(csrf())
                 }.andExpect {
                     status { isBadRequest }
@@ -380,7 +372,7 @@ internal class StoryControllerTest(
 
         @Test
         fun `GET to stories endpoint returns status code 401`() {
-            mockMvc.get("/${StoryModel.collectionRelationName}") {
+            mockMvc.get("/stories") {
             }.andExpect {
                 status { isUnauthorized }
             }
@@ -388,7 +380,7 @@ internal class StoryControllerTest(
 
         @Test
         fun `POST to stories endpoint returns status code 401`() {
-            mockMvc.post("/${StoryModel.collectionRelationName}") {
+            mockMvc.post("/stories") {
                 with(csrf())
             }.andExpect {
                 status { isUnauthorized }
@@ -397,7 +389,7 @@ internal class StoryControllerTest(
 
         @Test
         fun `DELETE to stories endpoint returns status code 401`() {
-            mockMvc.delete("/${StoryModel.collectionRelationName}/2017/12/1/anyId") {
+            mockMvc.delete("/stories/2017/12/1/anyId") {
                 with(csrf())
             }.andExpect {
                 status { isUnauthorized }

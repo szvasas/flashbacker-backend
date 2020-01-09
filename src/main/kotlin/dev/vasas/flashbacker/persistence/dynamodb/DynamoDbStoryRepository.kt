@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 
 @Repository
@@ -75,7 +75,7 @@ internal fun StoryEntity.toStory(): Story {
             location = this.location,
             dateHappened = this.dateHappened?.let { LocalDate.ofEpochDay(it) }
                     ?: throwInvalidDynamoDbItemException(dateHappenedFieldName),
-            timestampCreated = this.timestampCreated?.let { ZonedDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.of("UTC")) }
+            timestampCreated = this.timestampCreated?.let { ZonedDateTime.ofInstant(Instant.ofEpochMilli(it), UTC) }
                     ?: throwInvalidDynamoDbItemException(timestampCreatedFieldName),
             text = this.text ?: throwInvalidDynamoDbItemException(textFieldName)
     )

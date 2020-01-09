@@ -36,7 +36,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.security.Principal
 import java.time.DateTimeException
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -45,7 +45,7 @@ import java.util.UUID
 @CrossOrigin(origins = ["http://localhost:8080", "https://flashbacker-qa.vasas.dev", "https://flashbacker.vasas.dev"])
 class StoryController(
         private val idSuffixGenerator: () -> String = { UUID.randomUUID().toString() },
-        private val timestampGenerator: () -> ZonedDateTime = { ZonedDateTime.now(ZoneId.of("UTC")) },
+        private val timestampGenerator: () -> ZonedDateTime = { ZonedDateTime.now(UTC) },
         private val storyRepo: StoryRepository
 ) {
 

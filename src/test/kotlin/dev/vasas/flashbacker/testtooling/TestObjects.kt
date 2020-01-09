@@ -3,7 +3,7 @@ package dev.vasas.flashbacker.testtooling
 import dev.vasas.flashbacker.domain.Story
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 
 const val USER_ID_OF_BOB = "abcdef-12345"
@@ -16,7 +16,7 @@ val greatStoryOfBob = Story(
         dateHappened = LocalDate.of(2017, 12, 3),
         timestampCreated = ZonedDateTime.of(
                 LocalDateTime.of(2017, 12, 3, 15, 43, 15),
-                ZoneId.of("UTC")
+                UTC
         ),
         text = "Great things"
 )
@@ -47,7 +47,7 @@ val niceStoryOfAlice = Story(
         dateHappened = LocalDate.of(2012, 5, 3),
         timestampCreated = ZonedDateTime.of(
                 LocalDateTime.of(2012, 5, 3, 12, 5, 54),
-                ZoneId.of("UTC")
+                UTC
         ),
         text = "Nice story of Alice"
 )
