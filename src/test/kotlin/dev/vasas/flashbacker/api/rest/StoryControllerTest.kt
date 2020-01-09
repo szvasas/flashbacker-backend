@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -50,10 +51,18 @@ internal class StoryControllerTest(
         fun storyRepository() = mockStoryRepository
 
         @Bean
-        fun idGenerator(): () -> String = { "42" }
+        fun idSuffixGenerator(): () -> String = { "42" }
 
         @Bean
-        fun timestampCreatedGenerator(): () -> ZonedDateTime = { ZonedDateTime.of(LocalDateTime.MIN, ZoneId.of("UTC")) }
+        fun timestampCreatedGenerator(): () -> ZonedDateTime = {
+            ZonedDateTime.of(
+                    LocalDateTime.of(
+                            LocalDate.of(1970, 1, 1),
+                            LocalTime.MIDNIGHT
+                    ),
+                    ZoneId.of("UTC")
+            )
+        }
     }
 
     @BeforeEach
@@ -280,7 +289,7 @@ internal class StoryControllerTest(
                 }
 
                 assertThat(repoArgHolder.captured).isEqualTo(Story(
-                        id = storyIdGenerator(),
+                        id = "${timestampCreatedGenerator().toInstant().toEpochMilli()}${storyIdGenerator()}",
                         userId = USER_ID_OF_BOB,
                         location = "Home",
                         dateHappened = LocalDate.of(2017, 11, 23),

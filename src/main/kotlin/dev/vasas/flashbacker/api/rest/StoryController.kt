@@ -44,7 +44,7 @@ import java.util.UUID
 @RequestMapping(path = ["/$collectionRelationName"], produces = [MediaTypes.HAL_JSON_VALUE])
 @CrossOrigin(origins = ["http://localhost:8080", "https://flashbacker-qa.vasas.dev", "https://flashbacker.vasas.dev"])
 class StoryController(
-        private val idGenerator: () -> String = { UUID.randomUUID().toString() },
+        private val idSuffixGenerator: () -> String = { UUID.randomUUID().toString() },
         private val timestampGenerator: () -> ZonedDateTime = { ZonedDateTime.now(ZoneId.of("UTC")) },
         private val storyRepo: StoryRepository
 ) {
@@ -159,7 +159,7 @@ class StoryController(
     @ResponseStatus(HttpStatus.CREATED)
     fun createNewStory(principal: Principal, @RequestBody newStoryModel: StoryModel) {
         val newStory = Story(
-                id = idGenerator(),
+                id = "${timestampGenerator().toInstant().toEpochMilli()}${idSuffixGenerator()}",
                 userId = principal.name,
                 location = newStoryModel.location,
                 dateHappened = newStoryModel.dateHappened,
