@@ -11,3 +11,9 @@ data class Story(
         val timestampCreated: ZonedDateTime,
         val text: String
 )
+
+data class StoryKey(
+        val id: String,
+        val userId: String,
+        val dateHappened: LocalDate
+)

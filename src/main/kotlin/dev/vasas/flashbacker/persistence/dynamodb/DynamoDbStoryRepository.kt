@@ -1,6 +1,9 @@
 package dev.vasas.flashbacker.persistence.dynamodb
 
+import dev.vasas.flashbacker.domain.Page
+import dev.vasas.flashbacker.domain.PageRequest
 import dev.vasas.flashbacker.domain.Story
+import dev.vasas.flashbacker.domain.StoryKey
 import dev.vasas.flashbacker.domain.StoryRepository
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
@@ -33,14 +36,41 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.findByUserId(userId).map { it.toStory() }
     }
 
+    override fun findStoriesForUserPaged(userId: String, pageRequest: PageRequest<StoryKey>): Page<Story> {
+        val daoPageRequest = PageRequest(pageRequest.size, pageRequest.lastProcessedKey?.toStoryEntityKey())
+        val daoPage = storyDao.findByUserIdPaged(userId, daoPageRequest)
+        return Page(
+                daoPage.content.map { it.toStory() },
+                daoPage.hasNext
+        )
+    }
+
     override fun findStoriesForUserAndDate(userId: String, dateHappened: LocalDate): List<Story> {
         return storyDao.findByUserIdAndDateHappened(userId, dateHappened).map { it.toStory() }
     }
 
 }
 
+private const val COMPOSITE_KEY_DELIMITER = "_"
+
 internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): String {
-    return "${dateHappened}_${storyId}"
+    return "${dateHappened}$COMPOSITE_KEY_DELIMITER${storyId}"
+}
+
+internal fun StoryEntityKey.toStoryKey(): StoryKey {
+    val (dateHappenedString, idValue) = this.dateHappenedAndId.split(COMPOSITE_KEY_DELIMITER, limit = 2)
+    return StoryKey(
+            id = idValue,
+            dateHappened = LocalDate.parse(dateHappenedString),
+            userId = this.userId
+    )
+}
+
+internal fun StoryKey.toStoryEntityKey(): StoryEntityKey {
+    return StoryEntityKey(
+            userId = this.userId,
+            dateHappenedAndId = createCompositeSortKey(this.dateHappened, this.id)
+    )
 }
 
 internal fun Story.toStoryEntity(): StoryEntity {

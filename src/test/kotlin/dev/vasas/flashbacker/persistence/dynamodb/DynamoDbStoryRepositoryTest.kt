@@ -1,6 +1,9 @@
 package dev.vasas.flashbacker.persistence.dynamodb
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
+import dev.vasas.flashbacker.domain.PageRequest
+import dev.vasas.flashbacker.domain.Story
+import dev.vasas.flashbacker.domain.StoryKey
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHappenedFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
@@ -87,7 +90,49 @@ internal class DynamoDbStoryRepositoryTest(
             // when
             val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
 
+            // then
             assertThat(storiesOfAUser.toSet()).isEqualTo(storiesOfBob.toSet())
+        }
+
+        @Test
+        fun `found stories for a user are sorted by dateHappened and id descending`() {
+            // when
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+
+            // then
+            val comparator = compareBy(Story::dateHappened, Story::id).reversed()
+            assertThat(storiesOfAUser).isEqualTo(storiesOfBob.sortedWith(comparator))
+        }
+
+        @Test
+        fun `found story count in a page is equal to the requested value`() {
+            // when
+            val requestSize = 2
+            val foundPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(requestSize))
+
+            // then
+            assertThat(foundPage.content.size).isEqualTo(requestSize)
+        }
+
+        @Test
+        fun `second story page contains elements starting with the last element of the first page`() {
+            // given
+            val firstPageSize = storiesOfBob.size - 1
+            val firstPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(firstPageSize))
+
+            // when
+            val lastProcessed = firstPage.content.last()
+            val secondPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(
+                    Integer.MAX_VALUE,
+                    StoryKey(lastProcessed.id, lastProcessed.userId, lastProcessed.dateHappened)
+            ))
+
+            // then
+            assertThat(lastProcessed).isEqualTo(secondPage.content.first())
+
+            val joinedPages = firstPage.content + secondPage.content.drop(1)
+            val comparator = compareBy(Story::dateHappened, Story::id).reversed()
+            assertThat(joinedPages).isEqualTo(storiesOfBob.sortedWith(comparator))
         }
 
         @Test
@@ -95,7 +140,18 @@ internal class DynamoDbStoryRepositoryTest(
             // when
             val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
 
+            // then
             assertThat(storiesOfAUser.toSet()).isEqualTo(setOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay))
+        }
+
+        @Test
+        fun `found stories for a user and dateHappened are sorted by id descending`() {
+            // when
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
+
+            // then
+            val expected = listOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay).sortedByDescending { it.id }
+            assertThat(storiesOfAUser).isEqualTo(expected)
         }
     }
 
@@ -120,37 +176,49 @@ internal class DynamoDbStoryRepositoryTest(
 
     @Test
     fun `save method saves Story with location properly`() {
+        // given
         dynamoDbStoryRepository.save(niceStoryOfAlice)
 
+        // when
         val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
                 niceStoryOfAlice.userId,
                 niceStoryOfAlice.dateHappened,
                 niceStoryOfAlice.id
         )
+
+        // then
         assertThat(savedStory).isEqualTo(niceStoryOfAlice)
     }
 
     @Test
     fun `save method saves Story without location properly`() {
+        // given
         dynamoDbStoryRepository.save(niceStoryOfAliceWithoutLocation)
 
+        // when
         val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
                 niceStoryOfAliceWithoutLocation.userId,
                 niceStoryOfAliceWithoutLocation.dateHappened,
                 niceStoryOfAliceWithoutLocation.id
         )
+
+        // then
         assertThat(savedStory).isEqualTo(niceStoryOfAliceWithoutLocation)
     }
 
     @Test
     fun `save method saves Story with blank location properly`() {
+        // given
         dynamoDbStoryRepository.save(niceStoryOfAliceWithBlankLocation)
 
+        // when
         val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
                 niceStoryOfAliceWithBlankLocation.userId,
                 niceStoryOfAliceWithBlankLocation.dateHappened,
                 niceStoryOfAliceWithBlankLocation.id
         )
+
+        // then
         assertThat(savedStory).isEqualTo(niceStoryOfAliceWithBlankLocation.copy(location = null))
     }
 

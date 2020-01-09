@@ -35,3 +35,8 @@ data class StoryEntity(
         const val textFieldName = "text"
     }
 }
+
+data class StoryEntityKey(
+        val userId: String,
+        val dateHappenedAndId: String
+)
