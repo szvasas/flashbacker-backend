@@ -32,13 +32,9 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.findByKey(key.toStoryEntityKey())?.toStory()
     }
 
-    override fun findStoriesForUser(userId: String): List<Story> {
-        return storyDao.findByUserId(userId).map { it.toStory() }
-    }
-
-    override fun findStoriesForUserPaged(userId: String, pageRequest: PageRequest<StoryKey>): Page<Story> {
-        val daoPageRequest = PageRequest(pageRequest.size, pageRequest.lastProcessedKey?.toStoryEntityKey())
-        val daoPage = storyDao.findByUserIdPaged(userId, daoPageRequest)
+    override fun findStoriesForUser(userId: String, pageRequest: PageRequest<StoryKey>): Page<Story> {
+        val daoPageRequest = PageRequest(pageRequest.limit, pageRequest.lastProcessedKey?.toStoryEntityKey())
+        val daoPage = storyDao.findByUserId(userId, daoPageRequest)
         return Page(
                 daoPage.content.map { it.toStory() },
                 daoPage.hasNext
@@ -51,15 +47,6 @@ private const val COMPOSITE_KEY_DELIMITER = "_"
 
 internal fun createCompositeSortKey(dateHappened: LocalDate, storyId: String): String {
     return "${dateHappened}$COMPOSITE_KEY_DELIMITER${storyId}"
-}
-
-internal fun StoryEntityKey.toStoryKey(): StoryKey {
-    val (dateHappenedString, idValue) = this.dateHappenedAndId.split(COMPOSITE_KEY_DELIMITER, limit = 2)
-    return StoryKey(
-            id = idValue,
-            dateHappened = LocalDate.parse(dateHappenedString),
-            userId = this.userId
-    )
 }
 
 internal fun StoryKey.toStoryEntityKey(): StoryEntityKey {

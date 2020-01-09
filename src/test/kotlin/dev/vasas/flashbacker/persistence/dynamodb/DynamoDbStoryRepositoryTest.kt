@@ -9,6 +9,7 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.idFieldN
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.textFieldName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestampCreatedFieldName
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
+import dev.vasas.flashbacker.testtooling.USER_ID_OF_BOB
 import dev.vasas.flashbacker.testtooling.allStories
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
 import dev.vasas.flashbacker.testtooling.niceStoryOfAlice
@@ -16,6 +17,7 @@ import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithBlankLocation
 import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithoutLocation
 import dev.vasas.flashbacker.testtooling.storiesOfBob
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.SoftAssertions.assertSoftly
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -43,7 +45,7 @@ internal class DynamoDbStoryRepositoryTest(
     inner class `given there are no items in the DB` {
 
         @Test
-        fun `find method returns null`() {
+        fun `findByKey method returns null`() {
             // when
             val searchResult = dynamoDbStoryRepository.findByKey(greatStoryOfBob.key)
 
@@ -52,8 +54,19 @@ internal class DynamoDbStoryRepositoryTest(
         }
 
         @Test
-        fun `delete method does not throw`() {
+        fun `deleteByKey method does not throw`() {
             dynamoDbStoryRepository.deleteByKey(greatStoryOfBob.key)
+        }
+
+        @Test
+        fun `findStoriesForUser method returns an empty page with no next page`() {
+            // when
+            val storiesPage = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, unlimitedSizeRequest())
+
+            assertSoftly {
+                it.assertThat(storiesPage.content).isEmpty()
+                it.assertThat(storiesPage.hasNext).isFalse()
+            }
         }
     }
 
@@ -87,51 +100,64 @@ internal class DynamoDbStoryRepositoryTest(
         @Test
         fun `repository finds all the stories of the specified user but does not load stories of other users`() {
             // when
-            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, unlimitedSizeRequest())
 
             // then
-            assertThat(storiesOfAUser.toSet()).isEqualTo(storiesOfBob.toSet())
+            assertThat(storiesOfAUser.content).containsExactlyInAnyOrderElementsOf(storiesOfBob)
         }
 
         @Test
         fun `stories for a user are sorted by dateHappened and id descending`() {
             // when
-            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, unlimitedSizeRequest())
 
             // then
             val comparator = compareBy(Story::dateHappened, Story::id).reversed()
-            assertThat(storiesOfAUser).isEqualTo(storiesOfBob.sortedWith(comparator))
+            assertThat(storiesOfAUser.content).isEqualTo(storiesOfBob.sortedWith(comparator))
         }
 
         @Test
-        fun `story count in a page is equal to the requested value`() {
-            // when
-            val requestSize = 2
-            val foundPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(requestSize))
-
-            // then
-            assertThat(foundPage.content.size).isEqualTo(requestSize)
-        }
-
-        @Test
-        fun `second story page contains elements starting with the last element of the first page`() {
+        fun `given there are enough stories in the DB story count in a page is equal to the requested limit`() {
             // given
-            val firstPageSize = storiesOfBob.size - 1
-            val firstPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(firstPageSize))
+            val requestLimit = storiesOfBob.size - 1
 
             // when
-            val lastProcessed = firstPage.content.last()
-            val secondPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(
-                    Integer.MAX_VALUE,
-                    StoryKey(lastProcessed.id, lastProcessed.userId, lastProcessed.dateHappened)
-            ))
+            val foundPage = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, PageRequest(requestLimit))
 
             // then
-            assertThat(lastProcessed).isEqualTo(secondPage.content.first())
+            assertThat(foundPage.content.size).isEqualTo(requestLimit)
+        }
 
-            val joinedPages = firstPage.content + secondPage.content.drop(1)
-            val comparator = compareBy(Story::dateHappened, Story::id).reversed()
-            assertThat(joinedPages).isEqualTo(storiesOfBob.sortedWith(comparator))
+        @Test
+        fun `the last element of a story page is equal to the first element of the next page`() {
+            // given
+            val requestLimit = storiesOfBob.size - 1
+            val firstPage = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, PageRequest(requestLimit))
+            val lastElementOfTheFirstPage = firstPage.content.last()
+
+            // when
+            val secondPage = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, PageRequest(requestLimit, lastElementOfTheFirstPage.key))
+
+            // then
+            assertThat(lastElementOfTheFirstPage).isEqualTo(secondPage.content.first())
+        }
+
+        @Test
+        fun `the union of all the story pages contains exactly all of the stories for a user`() {
+            // given
+            val unionOfAllPages = mutableSetOf<Story>()
+            val requestLimit = 2
+            var lastProcessedKey: StoryKey? = null
+
+            // when
+            do {
+                val page = dynamoDbStoryRepository.findStoriesForUser(USER_ID_OF_BOB, PageRequest(requestLimit, lastProcessedKey))
+                unionOfAllPages.addAll(page.content)
+                lastProcessedKey = page.content.last().key
+            } while (page.hasNext)
+
+            // then
+            assertThat(unionOfAllPages).isEqualTo(storiesOfBob.toSet())
         }
 
     }
@@ -148,7 +174,7 @@ internal class DynamoDbStoryRepositoryTest(
 
             // expect
             val thrown = assertThrows<InvalidDynamoDbItemException> {
-                dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
+                dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId, unlimitedSizeRequest())
             }
 
             assertThat(thrown.message).isEqualTo("Cannot load item from DynamoDb! Missing mandatory field: $missingFieldName")
@@ -201,4 +227,6 @@ internal class DynamoDbStoryRepositoryTest(
                 .call(result, null)
         return result
     }
+
+    private fun <T> unlimitedSizeRequest() = PageRequest<T>(Integer.MAX_VALUE)
 }

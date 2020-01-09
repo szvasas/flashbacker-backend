@@ -17,5 +17,8 @@ data class StoryModel(
     companion object {
         const val itemRelationName: String = "story"
         const val collectionRelationName: String = "stories"
+        const val lastProcessedDateParamName: String = "lastProcessedDate"
+        const val lastProcessedIdParamName: String = "lastProcessedId"
+        const val limitParamName: String = "limit"
     }
 }

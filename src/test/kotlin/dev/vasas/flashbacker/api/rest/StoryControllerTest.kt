@@ -1,6 +1,7 @@
 package dev.vasas.flashbacker.api.rest
 
 import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
+import dev.vasas.flashbacker.domain.Page
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryRepository
 import dev.vasas.flashbacker.testtooling.USER_ID_OF_BOB
@@ -69,11 +70,11 @@ internal class StoryControllerTest(
         inner class `given GET method` {
 
             @Test
-            fun `given some stories exist in the DB stories endpoint without parameters returns all the stories for the logged in user with status code 200 and links`() {
+            fun `given some stories exist in the DB stories endpoint without parameters returns the page of the stories for the logged in user with status code 200 and links`() {
                 // given
                 every {
-                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
-                } returns listOf(awesomeStoryOfBob, greatStoryOfBob)
+                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
+                } returns Page(listOf(awesomeStoryOfBob, greatStoryOfBob))
 
                 mockMvc.get("/$collectionRelationName") {
                 }.andExpect {
@@ -119,7 +120,25 @@ internal class StoryControllerTest(
                 }
 
                 verify {
-                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
+                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
+                }
+            }
+
+            @Test
+            fun `given there are multiple pages of stories in the DB the response contains a correct next link`() {
+                // given
+                every {
+                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
+                } returns Page(listOf(awesomeStoryOfBob, greatStoryOfBob), true)
+
+                mockMvc.get("/$collectionRelationName") {
+                }.andExpect {
+                    status { isOk }
+                    jsonPath("$._links.next.href") {
+                        value("http://localhost/stories?lastProcessedDate=2017-12-03&lastProcessedId=test-id-1")
+                    }
+                }.andDo {
+                    print()
                 }
             }
 
@@ -127,8 +146,8 @@ internal class StoryControllerTest(
             fun `given no stories in the DB stories endpoint without parameters returns a response with status code 200 and links`() {
                 // given
                 every {
-                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
-                } returns emptyList()
+                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
+                } returns Page(emptyList())
 
                 mockMvc.get("/$collectionRelationName") {
                 }.andExpect {
@@ -150,7 +169,7 @@ internal class StoryControllerTest(
                 }
 
                 verify {
-                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB)
+                    mockStoryRepository.findStoriesForUser(USER_ID_OF_BOB, any())
                 }
             }
 

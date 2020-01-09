@@ -2,7 +2,6 @@ package dev.vasas.flashbacker.persistence.dynamodb
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator
 import com.amazonaws.services.dynamodbv2.model.Condition
@@ -33,15 +32,7 @@ class DynamoDbStoryDao(
         )
     }
 
-    fun findByUserId(userId: String): List<StoryEntity> {
-        val queryExpression = DynamoDBQueryExpression<StoryEntity>()
-                .withHashKeyValues(StoryEntity(userId = userId))
-                .withScanIndexForward(false)
-
-        return dynamoDbMapper.query(StoryEntity::class.java, queryExpression)
-    }
-
-    fun findByUserIdPaged(userId: String, pageRequest: PageRequest<StoryEntityKey>): Page<StoryEntity> {
+    fun findByUserId(userId: String, pageRequest: PageRequest<StoryEntityKey>): Page<StoryEntity> {
         val userEqualToInputCondition = Condition()
                 .withComparisonOperator(ComparisonOperator.EQ)
                 .withAttributeValueList(AttributeValue(userId))
@@ -49,7 +40,7 @@ class DynamoDbStoryDao(
         val queryRequest = QueryRequest(storyTableName)
                 .withKeyConditions(mapOf(userIdFieldName to userEqualToInputCondition))
                 .withScanIndexForward(false)
-                .withLimit(pageRequest.size)
+                .withLimit(pageRequest.limit)
 
         pageRequest.lastProcessedKey?.let {
             queryRequest.withExclusiveStartKey(mapOf(

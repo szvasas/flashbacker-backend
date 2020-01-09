@@ -1,14 +1,22 @@
 package dev.vasas.flashbacker.api.rest
 
 import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.lastProcessedDateParamName
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.lastProcessedIdParamName
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.limitParamName
 import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toCollectionModel
 import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toModel
+import dev.vasas.flashbacker.domain.Page
+import dev.vasas.flashbacker.domain.PageRequest
 import dev.vasas.flashbacker.domain.Story
 import dev.vasas.flashbacker.domain.StoryKey
 import dev.vasas.flashbacker.domain.StoryRepository
 import org.slf4j.LoggerFactory
 import org.springframework.hateoas.CollectionModel
-import org.springframework.hateoas.IanaLinkRelations
+import org.springframework.hateoas.IanaLinkRelations.NEXT
+import org.springframework.hateoas.IanaLinkRelations.SELF
+import org.springframework.hateoas.Link
+import org.springframework.hateoas.LinkRelation
 import org.springframework.hateoas.MediaTypes
 import org.springframework.hateoas.server.mvc.linkTo
 import org.springframework.http.HttpStatus
@@ -21,6 +29,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
@@ -42,15 +51,83 @@ class StoryController(
 
     private val logger = LoggerFactory.getLogger(StoryController::class.java)
 
+    companion object {
+        private const val DEFAULT_PAGE_LIMIT = 10
+    }
+
     @GetMapping
-    fun listStories(principal: Principal): CollectionModel<StoryModel> {
+    fun listStories(
+            principal: Principal,
+            @RequestParam(required = false, name = lastProcessedDateParamName) lastProcessedDate: String? = null,
+            @RequestParam(required = false, name = lastProcessedIdParamName) lastProcessedId: String? = null,
+            @RequestParam(required = false, name = limitParamName) limit: Int? = null
+    ): CollectionModel<StoryModel> {
         logger.info("Listing stories for user: ${principal.name}.")
-        val foundStories = storyRepo.findStoriesForUser(principal.name)
-        val result = toCollectionModel(foundStories)
-        val selfRel = linkTo<StoryController> { listStories(principal) }.withRel(IanaLinkRelations.SELF)
-        result.add(selfRel)
+        val pageRequest = createPageRequest(principal, lastProcessedDate, lastProcessedId, limit)
+        logger.info("Using page request: $pageRequest.")
+
+        val currentPage = storyRepo.findStoriesForUser(principal.name, pageRequest)
+        val result = toCollectionModel(currentPage.content)
+
+        result.add(buildLinks(principal, lastProcessedDate, lastProcessedId, limit, currentPage))
+
         logger.info("Returning result of size: ${result.content.size}.")
         return result
+    }
+
+    private fun buildLinks(
+            principal: Principal,
+            lastProcessedDate: String?,
+            lastProcessedId: String?,
+            limit: Int?,
+            currentPage: Page<Story>
+    ): List<Link> {
+        val result = mutableListOf<Link>()
+
+        result.add(buildLinkToListStories(SELF, principal, lastProcessedDate, lastProcessedId, limit))
+        if (currentPage.hasNext) {
+            val lastProcessed = currentPage.content.last()
+
+            val nextPageRel = buildLinkToListStories(NEXT, principal, lastProcessed.dateHappened.toString(), lastProcessed.id, limit)
+            result.add(nextPageRel)
+        }
+        return result
+    }
+
+    private fun createPageRequest(
+            principal: Principal,
+            lastProcessedDate: String?,
+            lastProcessedId: String?,
+            limit: Int?
+    ): PageRequest<StoryKey> {
+        val lastProcessedKey = if (lastProcessedDate != null && lastProcessedId != null) {
+            StoryKey(
+                    id = lastProcessedId,
+                    dateHappened = LocalDate.parse(lastProcessedDate),
+                    userId = principal.name
+            )
+        } else {
+            null
+        }
+        val requestLimit = limit ?: DEFAULT_PAGE_LIMIT
+
+        return PageRequest(requestLimit, lastProcessedKey)
+    }
+
+    private fun buildLinkToListStories(
+            linkRelation: LinkRelation,
+            principal: Principal,
+            lastProcessedDate: String?,
+            lastProcessedId: String?,
+            limit: Int?
+    ): Link {
+        return linkTo<StoryController> { listStories(principal, lastProcessedDate, lastProcessedId, limit) }
+                .withRel(linkRelation)
+                .expand(mapOf(
+                        lastProcessedDateParamName to lastProcessedDate,
+                        lastProcessedIdParamName to lastProcessedId,
+                        limitParamName to limit
+                ))
     }
 
     @GetMapping("/{year}/{month}/{dayOfMonth}/{id}")

@@ -30,7 +30,7 @@ internal class ApiControllerTest(@Autowired private val mockMvc: MockMvc) {
         @JvmStatic
         fun testCaseProvider() = Stream.of(
                 of("self", ""),
-                of("stories", StoryModel.collectionRelationName)
+                of("stories", "stories{?lastProcessedDate,lastProcessedId,limit}")
         )
     }
 
