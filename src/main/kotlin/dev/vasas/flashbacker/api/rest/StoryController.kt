@@ -1,9 +1,10 @@
 package dev.vasas.flashbacker.api.rest
 
+import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toCollectionModel
 import dev.vasas.flashbacker.api.rest.StoryModelAssembler.toModel
-import dev.vasas.flashbacker.api.rest.StoryModel.Companion.collectionRelationName
 import dev.vasas.flashbacker.domain.Story
+import dev.vasas.flashbacker.domain.StoryKey
 import dev.vasas.flashbacker.domain.StoryRepository
 import org.slf4j.LoggerFactory
 import org.springframework.hateoas.CollectionModel
@@ -63,7 +64,11 @@ class StoryController(
         logger.info("Retrieving story for user: ${principal.name}, date: $year-$month-$dayOfMonth and id: $id.")
         val dateHappened = parseDateHappened(year, month, dayOfMonth)
 
-        val foundStory = storyRepo.findByUserDateHappenedStoryId(principal.name, dateHappened, id)
+        val foundStory = storyRepo.findByKey(StoryKey(
+                id = id,
+                userId = principal.name,
+                dateHappened = dateHappened
+        ))
         return if (foundStory != null) {
             logger.info("Story is found.")
             ResponseEntity(toModel(foundStory), HttpStatus.OK)
@@ -101,7 +106,11 @@ class StoryController(
         logger.info("Deleting story for user: ${principal.name}, date: $year-$month-$dayOfMonth and id: $id.")
 
         val dateHappened = parseDateHappened(year, month, dayOfMonth)
-        storyRepo.deleteByUserDateHappenedStoryId(principal.name, dateHappened, id)
+        storyRepo.deleteByKey(StoryKey(
+                id = id,
+                userId = principal.name,
+                dateHappened = dateHappened
+        ))
     }
 
     private fun parseDateHappened(year: Int, month: Int, dayOfMonth: Int): LocalDate {

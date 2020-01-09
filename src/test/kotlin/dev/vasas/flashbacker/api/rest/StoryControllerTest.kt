@@ -158,7 +158,7 @@ internal class StoryControllerTest(
             fun `given no story is found for a specific parameter set stories endpoint returns an empty response with status code 404`() {
                 // given
                 every {
-                    mockStoryRepository.findByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 } returns null
 
                 mockMvc.get("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
@@ -171,15 +171,15 @@ internal class StoryControllerTest(
                 }
 
                 verify {
-                    mockStoryRepository.findByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 }
             }
 
             @Test
-            fun `given a story found for a specific parameter set stories endpoint returns the story with status code 200 and links`() {
+            fun `given a story is found for a specific parameter set stories endpoint returns the story with status code 200 and links`() {
                 // given
                 every {
-                    mockStoryRepository.findByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 } returns awesomeStoryOfBob
 
                 mockMvc.get("/$collectionRelationName/${awesomeStoryOfBob.dateHappened.year}" +
@@ -208,7 +208,7 @@ internal class StoryControllerTest(
                 }
 
                 verify {
-                    mockStoryRepository.findByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.findByKey(awesomeStoryOfBob.key)
                 }
             }
 
@@ -216,7 +216,7 @@ internal class StoryControllerTest(
             fun `given invalid date parameter is provided stories endpoint returns status code 400`() {
                 // given
                 every {
-                    mockStoryRepository.findByUserDateHappenedStoryId(any(), any(), any())
+                    mockStoryRepository.findByKey(any())
                 } returns awesomeStoryOfBob
                 val invalidMonth = 15
 
@@ -229,7 +229,7 @@ internal class StoryControllerTest(
                 }
 
                 verify(exactly = 0) {
-                    mockStoryRepository.findByUserDateHappenedStoryId(any(), any(), any())
+                    mockStoryRepository.findByKey(any())
                 }
             }
 
@@ -303,7 +303,7 @@ internal class StoryControllerTest(
             @Test
             fun `given valid parameters provided stories endpoint deletes the story and returns status code 204`() {
                 every {
-                    mockStoryRepository.deleteByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.deleteByKey(awesomeStoryOfBob.key)
                 } answers {
                     nothing
                 }
@@ -318,14 +318,14 @@ internal class StoryControllerTest(
                 }
 
                 verify {
-                    mockStoryRepository.deleteByUserDateHappenedStoryId(awesomeStoryOfBob.userId, awesomeStoryOfBob.dateHappened, awesomeStoryOfBob.id)
+                    mockStoryRepository.deleteByKey(awesomeStoryOfBob.key)
                 }
             }
 
             @Test
             fun `given invalid date parameter is provided stories endpoint returns status code 400`() {
                 every {
-                    mockStoryRepository.deleteByUserDateHappenedStoryId(any(), any(), any())
+                    mockStoryRepository.deleteByKey(any())
                 } answers {
                     nothing
                 }
@@ -341,7 +341,7 @@ internal class StoryControllerTest(
                 }
 
                 verify(exactly = 0) {
-                    mockStoryRepository.deleteByUserDateHappenedStoryId(any(), any(), any())
+                    mockStoryRepository.deleteByKey(any())
                 }
             }
         }

@@ -24,12 +24,12 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         return storyDao.save(story.toStoryEntity())
     }
 
-    override fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String) {
-        storyDao.deleteByUserIdAndDateHappenedAndId(userId, createCompositeSortKey(dateHappened, storyId))
+    override fun deleteByKey(key: StoryKey) {
+        storyDao.deleteByKey(key.toStoryEntityKey())
     }
 
-    override fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story? {
-        return storyDao.findByUserIdAndDateHappenedAndId(userId, createCompositeSortKey(dateHappened, storyId))?.toStory()
+    override fun findByKey(key: StoryKey): Story? {
+        return storyDao.findByKey(key.toStoryEntityKey())?.toStory()
     }
 
     override fun findStoriesForUser(userId: String): List<Story> {

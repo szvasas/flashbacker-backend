@@ -45,7 +45,7 @@ internal class DynamoDbStoryRepositoryTest(
         @Test
         fun `find method returns null`() {
             // when
-            val searchResult = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+            val searchResult = dynamoDbStoryRepository.findByKey(greatStoryOfBob.key)
 
             // then
             assertThat(searchResult).isNull()
@@ -53,7 +53,7 @@ internal class DynamoDbStoryRepositoryTest(
 
         @Test
         fun `delete method does not throw`() {
-            dynamoDbStoryRepository.deleteByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+            dynamoDbStoryRepository.deleteByKey(greatStoryOfBob.key)
         }
     }
 
@@ -67,21 +67,21 @@ internal class DynamoDbStoryRepositoryTest(
         }
 
         @Test
-        fun `repository finds saved Story by userId, dateHappened and storyId`() {
+        fun `repository finds saved Story by its key`() {
             // when
-            val foundStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+            val foundStory = dynamoDbStoryRepository.findByKey(greatStoryOfBob.key)
 
             // then
             assertThat(foundStory).isEqualTo(greatStoryOfBob)
         }
 
         @Test
-        fun `repository deletes existing Story by userId, dateHappened and storyId`() {
+        fun `repository deletes existing Story by its key`() {
             // when
-            dynamoDbStoryRepository.deleteByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)
+            dynamoDbStoryRepository.deleteByKey(greatStoryOfBob.key)
 
             // then
-            assertThat(dynamoDbStoryRepository.findByUserDateHappenedStoryId(greatStoryOfBob.userId, greatStoryOfBob.dateHappened, greatStoryOfBob.id)).isNull()
+            assertThat(dynamoDbStoryRepository.findByKey(greatStoryOfBob.key)).isNull()
         }
 
         @Test
@@ -94,7 +94,7 @@ internal class DynamoDbStoryRepositoryTest(
         }
 
         @Test
-        fun `found stories for a user are sorted by dateHappened and id descending`() {
+        fun `stories for a user are sorted by dateHappened and id descending`() {
             // when
             val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUser(greatStoryOfBob.userId)
 
@@ -104,7 +104,7 @@ internal class DynamoDbStoryRepositoryTest(
         }
 
         @Test
-        fun `found story count in a page is equal to the requested value`() {
+        fun `story count in a page is equal to the requested value`() {
             // when
             val requestSize = 2
             val foundPage = dynamoDbStoryRepository.findStoriesForUserPaged(greatStoryOfBob.userId, PageRequest(requestSize))
@@ -161,11 +161,7 @@ internal class DynamoDbStoryRepositoryTest(
         dynamoDbStoryRepository.save(niceStoryOfAlice)
 
         // when
-        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
-                niceStoryOfAlice.userId,
-                niceStoryOfAlice.dateHappened,
-                niceStoryOfAlice.id
-        )
+        val savedStory = dynamoDbStoryRepository.findByKey(niceStoryOfAlice.key)
 
         // then
         assertThat(savedStory).isEqualTo(niceStoryOfAlice)
@@ -177,11 +173,7 @@ internal class DynamoDbStoryRepositoryTest(
         dynamoDbStoryRepository.save(niceStoryOfAliceWithoutLocation)
 
         // when
-        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
-                niceStoryOfAliceWithoutLocation.userId,
-                niceStoryOfAliceWithoutLocation.dateHappened,
-                niceStoryOfAliceWithoutLocation.id
-        )
+        val savedStory = dynamoDbStoryRepository.findByKey(niceStoryOfAliceWithoutLocation.key)
 
         // then
         assertThat(savedStory).isEqualTo(niceStoryOfAliceWithoutLocation)
@@ -193,11 +185,7 @@ internal class DynamoDbStoryRepositoryTest(
         dynamoDbStoryRepository.save(niceStoryOfAliceWithBlankLocation)
 
         // when
-        val savedStory = dynamoDbStoryRepository.findByUserDateHappenedStoryId(
-                niceStoryOfAliceWithBlankLocation.userId,
-                niceStoryOfAliceWithBlankLocation.dateHappened,
-                niceStoryOfAliceWithBlankLocation.id
-        )
+        val savedStory = dynamoDbStoryRepository.findByKey(niceStoryOfAliceWithBlankLocation.key)
 
         // then
         assertThat(savedStory).isEqualTo(niceStoryOfAliceWithBlankLocation.copy(location = null))

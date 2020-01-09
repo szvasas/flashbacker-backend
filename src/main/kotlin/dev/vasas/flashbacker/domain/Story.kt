@@ -10,7 +10,13 @@ data class Story(
         val dateHappened: LocalDate,
         val timestampCreated: ZonedDateTime,
         val text: String
-)
+) {
+    val key: StoryKey = StoryKey(
+            id = this.id,
+            userId = this.userId,
+            dateHappened = this.dateHappened
+    )
+}
 
 data class StoryKey(
         val id: String,

@@ -1,14 +1,12 @@
 package dev.vasas.flashbacker.domain
 
-import java.time.LocalDate
-
 interface StoryRepository {
 
     fun save(story: Story)
 
-    fun deleteByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String)
+    fun deleteByKey(key: StoryKey)
 
-    fun findByUserDateHappenedStoryId(userId: String, dateHappened: LocalDate, storyId: String): Story?
+    fun findByKey(key: StoryKey): Story?
 
     fun findStoriesForUser(userId: String): List<Story>
 

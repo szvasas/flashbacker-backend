@@ -24,11 +24,11 @@ class DynamoDbStoryDao(
         dynamoDbMapper.save(storyEntity)
     }
 
-    fun deleteByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String) {
+    fun deleteByKey(key: StoryEntityKey) {
         dynamoDbMapper.delete(
                 StoryEntity(
-                        userId = userId,
-                        dateHappenedAndId = dateHappenedAndId
+                        userId = key.userId,
+                        dateHappenedAndId = key.dateHappenedAndId
                 )
         )
     }
@@ -66,11 +66,11 @@ class DynamoDbStoryDao(
         return Page(content, hasNext)
     }
 
-    fun findByUserIdAndDateHappenedAndId(userId: String, dateHappenedAndId: String): StoryEntity? {
+    fun findByKey(key: StoryEntityKey): StoryEntity? {
         return dynamoDbMapper.load(
                 StoryEntity(
-                        userId = userId,
-                        dateHappenedAndId = dateHappenedAndId
+                        userId = key.userId,
+                        dateHappenedAndId = key.dateHappenedAndId
                 )
         )
     }
