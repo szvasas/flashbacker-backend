@@ -11,7 +11,6 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.timestam
 import dev.vasas.flashbacker.testtooling.DynamoDbIntegrationTest
 import dev.vasas.flashbacker.testtooling.allStories
 import dev.vasas.flashbacker.testtooling.greatStoryOfBob
-import dev.vasas.flashbacker.testtooling.greatStoryOfBobOnTheSameDay
 import dev.vasas.flashbacker.testtooling.niceStoryOfAlice
 import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithBlankLocation
 import dev.vasas.flashbacker.testtooling.niceStoryOfAliceWithoutLocation
@@ -135,24 +134,6 @@ internal class DynamoDbStoryRepositoryTest(
             assertThat(joinedPages).isEqualTo(storiesOfBob.sortedWith(comparator))
         }
 
-        @Test
-        fun `repository finds all the stories of the specified user and date`() {
-            // when
-            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
-
-            // then
-            assertThat(storiesOfAUser.toSet()).isEqualTo(setOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay))
-        }
-
-        @Test
-        fun `found stories for a user and dateHappened are sorted by id descending`() {
-            // when
-            val storiesOfAUser = dynamoDbStoryRepository.findStoriesForUserAndDate(greatStoryOfBob.userId, greatStoryOfBob.dateHappened)
-
-            // then
-            val expected = listOf(greatStoryOfBob, greatStoryOfBobOnTheSameDay).sortedByDescending { it.id }
-            assertThat(storiesOfAUser).isEqualTo(expected)
-        }
     }
 
     @Nested

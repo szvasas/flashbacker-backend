@@ -14,8 +14,6 @@ interface StoryRepository {
 
     fun findStoriesForUserPaged(userId: String, pageRequest: PageRequest<StoryKey>): Page<Story>
 
-    fun findStoriesForUserAndDate(userId: String, dateHappened: LocalDate): List<Story>
-
 }
 
 data class Page<T>(

@@ -13,7 +13,6 @@ import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.dateHapp
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.storyTableName
 import dev.vasas.flashbacker.persistence.dynamodb.StoryEntity.Companion.userIdFieldName
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class DynamoDbStoryDao(
@@ -76,16 +75,4 @@ class DynamoDbStoryDao(
         )
     }
 
-    fun findByUserIdAndDateHappened(userId: String, dateHappened: LocalDate): List<StoryEntity> {
-        val beginsWithInputDate = Condition()
-                .withComparisonOperator(ComparisonOperator.BEGINS_WITH)
-                .withAttributeValueList(AttributeValue(dateHappened.toString()))
-
-        val queryExpression = DynamoDBQueryExpression<StoryEntity>()
-                .withHashKeyValues(StoryEntity(userId = userId))
-                .withRangeKeyCondition(dateHappenedAndIdFieldName, beginsWithInputDate)
-                .withScanIndexForward(false)
-
-        return dynamoDbMapper.query(StoryEntity::class.java, queryExpression)
-    }
 }

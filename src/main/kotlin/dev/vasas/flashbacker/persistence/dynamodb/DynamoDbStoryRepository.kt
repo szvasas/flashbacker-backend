@@ -45,10 +45,6 @@ class DynamoDbStoryRepository(@Autowired private val storyDao: DynamoDbStoryDao)
         )
     }
 
-    override fun findStoriesForUserAndDate(userId: String, dateHappened: LocalDate): List<Story> {
-        return storyDao.findByUserIdAndDateHappened(userId, dateHappened).map { it.toStory() }
-    }
-
 }
 
 private const val COMPOSITE_KEY_DELIMITER = "_"
